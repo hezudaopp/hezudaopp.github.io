@@ -62,6 +62,44 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-APM系统在线程间共享追踪链路数据问题" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="article-date">
+  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">2019-01-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqlon0mc00019mp4zz9pi1m5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-最终一致性落地" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/01/06/最终一致性落地/" class="article-date">
@@ -88,7 +126,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqlofe3i00037wp4wuwgtuzm" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqlon0mg00039mp46oci96fi" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -124,12 +162,12 @@
       
         <p>服务提供者框架具体实现就不多说，主要有个问题，为何在服务提供者框架中提供者不可少？也就是说如果把提供者注册API注册不是Prodiver，而是Service有何不妥？这样的实现不也是多态的吗？</p>
 <p>私人愚见，主要问题在于如果通过不同Service接口的实现类来静态工厂方法来返回对象，那么注册Service的类必须依赖所有的Service实现类；这是不现实的，因为这样的话，在编写注册类的时候，Service的实现就必须存在。这违背了<strong>对添加开放，对修改封闭</strong>原则，每次新增一种Service实现都需要去改变注册类的实现，而且，在编写注册类代码时，是不会知道有多少种Service的实现。</p>
-<p>服务提供者框架目标是依赖反转（Dependency Reverse），如果说每新增一种Service，都需要修改注册类的代码，服务提供者框架实现也就不太可靠的。</p>
+<p>服务提供者框架目标是<strong>依赖反转</strong>（Dependency Reverse），如果说每新增一种Service，都需要修改注册类的代码，服务提供者框架实现也就不太可靠的。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqlofe3j00047wp4s2zmgg78" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqlon0mj00059mp4r95xw4lr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -173,7 +211,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqlofe3a00007wp4c1j6vl7h" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqlon0m700009mp49e2lqwxl" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -211,7 +249,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqlofe3e00017wp440vugumy" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqlon0mh00049mp4g5g58yt0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
@@ -236,7 +274,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
     </div>
   </div>
 
@@ -246,7 +284,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
+      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
     </div>
   </div>
 
@@ -266,6 +304,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
+          </li>
         
           <li>
             <a href="/2019/01/06/最终一致性落地/">最终一致性落地</a>
