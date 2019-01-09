@@ -5,15 +5,20 @@
   
 
   
-  <title>Archives: 2018 | 楚湘越水</title>
+  <title>基于枚举实现的单例 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/archives/2018/index.html">
+  <meta name="description" content="相较于类公有final域和静态构造方法实现的单例，基于枚举实现的单例更加安全：  无法通过反射将构造函数Accessible设置为public。 对于可序列化的类，无需实现重写readObject方法。">
+<meta name="keywords" content="Single Instance Parttern">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于枚举实现的单例">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="相较于类公有final域和静态构造方法实现的单例，基于枚举实现的单例更加安全：  无法通过反射将构造函数Accessible设置为public。 对于可序列化的类，无需实现重写readObject方法。">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-01-09T01:37:13.338Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="基于枚举实现的单例">
+<meta name="twitter:description" content="相较于类公有final域和静态构造方法实现的单例，基于枚举实现的单例更加安全：  无法通过反射将构造函数Accessible设置为public。 对于可序列化的类，无需实现重写readObject方法。">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,59 +65,58 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2018/12/28/Executor-Service内存泄漏/" class="archive-article-date">
-  <time datetime="2018-12-28T12:50:22.000Z" itemprop="datePublished">Dec 28</time>
+        <section id="main"><article id="post-基于枚举实现的单例" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/01/09/基于枚举实现的单例/" class="article-date">
+  <time datetime="2019-01-09T01:32:59.000Z" itemprop="datePublished">2019-01-09</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/12/28/Executor-Service内存泄漏/">Executor Service内存泄漏</a>
+    <h1 class="article-title" itemprop="name">
+      基于枚举实现的单例
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2018/12/26/Hibernate持久化上下文对象同一性问题/" class="archive-article-date">
-  <time datetime="2018-12-26T12:56:07.000Z" itemprop="datePublished">Dec 26</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/12/26/Hibernate持久化上下文对象同一性问题/">Hibernate持久化上下文对象同一性问题</a>
-    </h1>
-  
+        <p>相较于类公有final域和静态构造方法实现的单例，基于枚举实现的单例更加安全：</p>
+<ul>
+<li>无法通过反射将构造函数Accessible设置为public。</li>
+<li>对于可序列化的类，无需实现重写readObject方法。</li>
+</ul>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqoikvjz000387p4m0el8y7b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
+
+    </footer>
   </div>
-</article>
+  
+    
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/01/09/构造者模式/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">构造者模式</div>
+    </a>
   
+</nav>
 
+  
+</article>
 
 </section>
         
