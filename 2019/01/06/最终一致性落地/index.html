@@ -7,15 +7,18 @@
   
   <title>最终一致性落地 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="keywords" content="BASE,最终一致性">
+  <meta name="description" content="1. 最终一致性思路以下方案不考虑业务逆操作。 1.1. 退单业务为例 生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为开始成功（事务协调器执行） 异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行） 消费第二步的消息，更新全局事务log表，状态设置为第一阶段成功（事务协调器执行） 异步执行回库业务（需要保证幂">
+<meta name="keywords" content="BASE,最终一致性">
 <meta property="og:type" content="article">
 <meta property="og:title" content="最终一致性落地">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/01/06/最终一致性落地/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="1. 最终一致性思路以下方案不考虑业务逆操作。 1.1. 退单业务为例 生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为开始成功（事务协调器执行） 异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行） 消费第二步的消息，更新全局事务log表，状态设置为第一阶段成功（事务协调器执行） 异步执行回库业务（需要保证幂">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-01-06T13:32:56.224Z">
+<meta property="og:updated_time" content="2019-01-09T09:27:29.057Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="最终一致性落地">
+<meta name="twitter:description" content="1. 最终一致性思路以下方案不考虑业务逆操作。 1.1. 退单业务为例 生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为开始成功（事务协调器执行） 异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行） 消费第二步的消息，更新全局事务log表，状态设置为第一阶段成功（事务协调器执行） 异步执行回库业务（需要保证幂">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -84,11 +87,51 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h4 id="1-最终一致性思路"><a href="#1-最终一致性思路" class="headerlink" title="1. 最终一致性思路"></a>1. 最终一致性思路</h4><p>以下方案不考虑业务逆操作。</p>
+<h5 id="1-1-退单业务为例"><a href="#1-1-退单业务为例" class="headerlink" title="1.1. 退单业务为例"></a>1.1. 退单业务为例</h5><ol>
+<li>生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为<code>开始成功</code>（事务协调器执行）</li>
+<li>异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行）</li>
+<li>消费第二步的消息，更新全局事务log表，状态设置为<code>第一阶段成功</code>（事务协调器执行）</li>
+<li>异步执行回库业务（需要保证幂等性），发同步消息队列（send ack）通知事务协调器第四步成功（商品服务执行）</li>
+<li>消费第四步的消息，更新全局事务log表，状态设置为<code>第二阶段成功</code>（事务协调器执行）</li>
+</ol>
+<h5 id="1-2-失败分析"><a href="#1-2-失败分析" class="headerlink" title="1.2. 失败分析"></a>1.2. 失败分析</h5><ol>
+<li>第一步失败，不做操作。</li>
+<li>第二步失败，异常回滚，发同步消息队列（send ack）通知事务协调器第二步失败，事务状态设置为<code>第一阶段失败</code></li>
+<li>第三步失败，也就是说第二步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
+<li>第四步失败，两种方案<ul>
+<li>调用第二步逆操作方法（该方案需要考虑该步失败情况，暂不考虑）</li>
+<li>定时轮询全局事务log表中状态为<code>第一阶段成功</code>的记录，重发消息重试第四步。</li>
+</ul>
+</li>
+<li>第五步失败，也就是说第四步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
+</ol>
+<h5 id="1-3-重试说明"><a href="#1-3-重试说明" class="headerlink" title="1.3. 重试说明"></a>1.3. 重试说明</h5><ul>
+<li>所有重试操作需要记录重试次数，超过一定次数后需人工介入</li>
+<li>所有重试操作都需要保证幂等性。<ul>
+<li>事务状态更新的幂等性：通过乐观锁保证</li>
+<li>业务逻辑的幂等性，如果要统一处理，可以在业务方数据库添加一张额外的日志表，用主键约束保证</li>
+</ul>
+</li>
+</ul>
+<h5 id="1-4-消息队列说明"><a href="#1-4-消息队列说明" class="headerlink" title="1.4. 消息队列说明"></a>1.4. 消息队列说明</h5><ul>
+<li>业务方发送同步消息，需要发送成功确认，确保消息已经投递到消息队列。如果消息失败，则业务方事务回滚。</li>
+<li>重试的消息，不应该影响阻塞正常消息的消费。</li>
+</ul>
+<h5 id="1-5-事务状态流转"><a href="#1-5-事务状态流转" class="headerlink" title="1.5. 事务状态流转"></a>1.5. 事务状态流转</h5><ul>
+<li>表设计：<ul>
+<li>transacion: id, current_span_id, current_node, status, service_type, time_create, time_update</li>
+<li>transaction_span: id, transaction_id, parent_span_id, node, retry_times, status, time_create</li>
+</ul>
+</li>
+<li>流程图<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 事务开始</span><br><span class="line">op_1=&gt;operation: 1：事务初始化</span><br><span class="line">io_1_yes=&gt;inputoutput: 事务初始化成功</span><br><span class="line">op_2=&gt;operation: 2：执行退单业务</span><br><span class="line">io_2_yes=&gt;inputoutput: 退单成功</span><br><span class="line">op_3=&gt;operation: 3：更新事务状态</span><br><span class="line">io_3_yes=&gt;inputoutput: ack退单成功</span><br><span class="line">op_4=&gt;operation: 4：执行回库业务</span><br><span class="line">io_4_yes=&gt;inputoutput: 回库成功</span><br><span class="line">op_5=&gt;operation: 5：更新事务状态</span><br><span class="line">io_5_yes=&gt;inputoutput: ack回库成功</span><br><span class="line">e=&gt;end: 事务结束</span><br><span class="line">cond_1=&gt;condition: 成功？</span><br><span class="line">cond_2=&gt;condition: 成功？</span><br><span class="line">cond_3=&gt;condition: 成功？</span><br><span class="line">cond_4=&gt;condition: 成功？</span><br><span class="line">cond_5=&gt;condition: 成功？</span><br><span class="line">op_2_no=&gt;operation: 回滚</span><br><span class="line">io_2_no=&gt;inputoutput: 执行退单业务失败</span><br><span class="line">op_3_no=&gt;operation: 重试</span><br><span class="line">op_4_no=&gt;operation: 重试</span><br><span class="line">op_5_no=&gt;operation: 重试</span><br><span class="line">st-&gt;op_1-&gt;cond_1(yes)-&gt;io_1_yes-&gt;op_2-&gt;cond_2(yes)-&gt;io_2_yes-&gt;op_3-&gt;cond_3(yes)-&gt;io_3_yes-&gt;op_4-&gt;cond_4(yes)-&gt;io_4_yes-&gt;op_5-&gt;cond_5(yes)-&gt;io_5_yes(right)-&gt;e</span><br><span class="line">cond_1(no)-&gt;e</span><br><span class="line">cond_2(no)-&gt;op_2_no(right)-&gt;e</span><br><span class="line">cond_3(no)-&gt;op_3_no(right)-&gt;op_3</span><br><span class="line">cond_4(no)-&gt;op_4_no(right)-&gt;op_4</span><br><span class="line">cond_5(no)-&gt;op_5_no(right)-&gt;op_5</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqoikvkd000q87p49q9etndt" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqozehia0004hwp4pab1gztc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>

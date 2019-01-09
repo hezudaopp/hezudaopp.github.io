@@ -7,18 +7,18 @@
   
   <title>Executor Service内存泄漏 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="线上某台机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，可">
+  <meta name="description" content="线上某台主机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，">
 <meta name="keywords" content="Thread,Executor Service">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Executor Service内存泄漏">
 <meta property="og:url" content="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/index.html">
 <meta property="og:site_name" content="楚湘越水">
-<meta property="og:description" content="线上某台机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，可">
+<meta property="og:description" content="线上某台主机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-01-07T01:57:06.680Z">
+<meta property="og:updated_time" content="2019-01-09T01:41:17.059Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Executor Service内存泄漏">
-<meta name="twitter:description" content="线上某台机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，可">
+<meta name="twitter:description" content="线上某台主机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。 JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -87,7 +87,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>线上某台机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。</p>
+        <p>线上某台主机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。</p>
 <p>JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，可能会导致OutOfMemoryError异常。</p>
 <p>查看错误日志，发现如下信息<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.OutOfMemoryError    ERROR    java.lang.OutOfMemoryError: unable to create <span class="keyword">new</span> <span class="keyword">native</span> thread</span><br></pre></td></tr></table></figure></p>
 <p>看来调用Native函数分配线程内存时出错，回想昨晚新发布的代码，跟线程有关的就是有个方法使用了局部变量引用ThreadPoolExecutor分配的线程池，而该线程池在方法结束之前没有调用ExecutorServie的shutdown方法释放线程池导致内存泄漏。</p>
@@ -97,7 +97,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqoikvju000187p42vtqs01r" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqozehi90003hwp4w1ph21kq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
