@@ -93,7 +93,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqozehib0005hwp4r5n9cgnp" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqozk0z10008izp4j1ce911d" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -136,7 +136,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqozehie0009hwp4353jf6ha" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqozk0z00007izp45rmj7wai" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -174,7 +174,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqozehi50001hwp402o44nck" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqozk0yj0000izp4zhr9s9yn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -208,8 +208,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h4 id="1-最终一致性思路"><a href="#1-最终一致性思路" class="headerlink" title="1. 最终一致性思路"></a>1. 最终一致性思路</h4><p>以下方案不考虑业务逆操作。</p>
-<h5 id="1-1-退单业务为例"><a href="#1-1-退单业务为例" class="headerlink" title="1.1. 退单业务为例"></a>1.1. 退单业务为例</h5><ol>
+        <h4 id="1-基于重试的最终一致性（不考虑业务逆操作）"><a href="#1-基于重试的最终一致性（不考虑业务逆操作）" class="headerlink" title="1. 基于重试的最终一致性（不考虑业务逆操作）"></a>1. 基于重试的最终一致性（不考虑业务逆操作）</h4><h5 id="1-1-退单业务为例"><a href="#1-1-退单业务为例" class="headerlink" title="1.1. 退单业务为例"></a>1.1. 退单业务为例</h5><ol>
 <li>生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为<code>开始成功</code>（事务协调器执行）</li>
 <li>异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行）</li>
 <li>消费第二步的消息，更新全局事务log表，状态设置为<code>第一阶段成功</code>（事务协调器执行）</li>
@@ -252,7 +251,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqozehia0004hwp4pab1gztc" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqozk0yy0004izp4naoszr2t" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -293,7 +292,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqozehid0008hwp4nrdn5d5a" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqozk0yz0005izp4r7emlua1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -337,7 +336,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqozehi90003hwp4w1ph21kq" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqozk0ys0001izp4k86vuuqp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -375,7 +374,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqozehi00000hwp4v4gj2j64" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqozk0yw0003izp47eiyhrda" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
