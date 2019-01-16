@@ -93,7 +93,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqozk0z10008izp4j1ce911d" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqyzq6hs00051sp4nu1e5puw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -136,7 +136,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqozk0z00007izp45rmj7wai" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqyzq6hv00081sp4hdzs8ya7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -174,7 +174,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqozk0yj0000izp4zhr9s9yn" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqyzq6ho00031sp4u7i6anfb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -251,7 +251,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqozk0yy0004izp4naoszr2t" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqyzq6hq00041sp4dso7ahi9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -286,13 +286,13 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>服务提供者框架具体实现就不多说，主要有个问题，为何在服务提供者框架中提供者不可少？也就是说如果把提供者注册API注册不是Prodiver，而是Service有何不妥？这样的实现不也是多态的吗？</p>
-<p>私人愚见，主要问题在于如果通过不同Service接口的实现类来静态工厂方法来返回对象，那么注册Service的类必须依赖所有的Service实现类；这是不现实的，因为这样的话，在编写注册类的时候，Service的实现就必须存在。这违背了<strong>对添加开放，对修改封闭</strong>原则，每次新增一种Service实现都需要去改变注册类的实现，而且，在编写注册类代码时，是不会知道有多少种Service的实现。</p>
+<p>私人愚见，主要问题在于：如果通过不同Service接口的实现类的静态工厂方法或者构造函数来返回对象，那么注册Service的类必须依赖所有的Service实现类，因为静态方法不支持多态，而构造函数的话需要依赖具体实现类。如此，在编写注册类的时候，Service的实现就必须存在。这违背了<strong>对添加开放，对修改封闭</strong>原则，每次新增一种Service实现都需要去改变注册类的实现，而且，在编写注册类代码时，是不会知道有多少种Service的实现。</p>
 <p>服务提供者框架目标是<strong>依赖反转</strong>（Dependency Reverse），如果说每新增一种Service，都需要修改注册类的代码，服务提供者框架实现也就不太可靠的。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqozk0yz0005izp4r7emlua1" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqyzq6hu00071sp44v1r10bh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -336,7 +336,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqozk0ys0001izp4k86vuuqp" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqyzq6hf00001sp45r66e9z7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -374,7 +374,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqozk0yw0003izp47eiyhrda" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqyzq6hl00011sp4luvte3f2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
