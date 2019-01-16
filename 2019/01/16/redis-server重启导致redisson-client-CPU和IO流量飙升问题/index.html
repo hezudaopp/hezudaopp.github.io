@@ -15,13 +15,13 @@
 <meta property="og:site_name" content="楚湘越水">
 <meta property="og:description" content="现象：java1, java2, java4 cpu上升并且与redis的IO流量飙升，飙升之后没有下降趋势且趋于稳定 java3指标正常是因为java3的dubbo服务被禁用。 分析： 出问题的时间点scheduled在启动（应该是巧合，第二天晚上重新尝试重启scheduled无法重现，而且从业务上说也解释不通。）  出问题的时间点同时出现redis connect timeout错误（需确认那">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/_v_images/20190116175455944_668045513.png">
-<meta property="og:image" content="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/_v_images/20190116180244685_796430475.png">
-<meta property="og:updated_time" content="2019-01-16T10:02:56.307Z">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116175455944_668045513.png?raw=true">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true">
+<meta property="og:updated_time" content="2019-01-16T10:19:12.685Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="redis server重启导致redisson client CPU和IO流量飙升问题">
 <meta name="twitter:description" content="现象：java1, java2, java4 cpu上升并且与redis的IO流量飙升，飙升之后没有下降趋势且趋于稳定 java3指标正常是因为java3的dubbo服务被禁用。 分析： 出问题的时间点scheduled在启动（应该是巧合，第二天晚上重新尝试重启scheduled无法重现，而且从业务上说也解释不通。）  出问题的时间点同时出现redis connect timeout错误（需确认那">
-<meta name="twitter:image" content="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/_v_images/20190116175455944_668045513.png">
+<meta name="twitter:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116175455944_668045513.png?raw=true">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -101,10 +101,9 @@
 </li>
 <li><p>docker stats发现，出问题的三台机子product-service cpu都达到200%以上</p>
 </li>
-<li><p>arthas thread -n5，发现redisson-netty-1-*这类线程占用cpu资源比较多，而且调用堆栈信息都是：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"redisson-netty-1-13"</span> Id=<span class="number">51</span> cpuUsage=<span class="number">7</span>% RUNNABLE (in <span class="keyword">native</span>)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:<span class="number">269</span>)</span><br><span class="line">    at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:<span class="number">93</span>)</span><br><span class="line">    at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:<span class="number">86</span>)</span><br><span class="line">    -  locked io.netty.channel.nio.SelectedSelectionKeySet@<span class="number">31f</span>3c444</span><br><span class="line">    -  locked java.util.Collections$UnmodifiableSet@<span class="number">15</span>dc8f75</span><br><span class="line">    -  locked sun.nio.ch.EPollSelectorImpl@<span class="number">405</span>d0006</span><br><span class="line">    at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:<span class="number">97</span>)</span><br><span class="line">    at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:<span class="number">62</span>)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:<span class="number">753</span>)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:<span class="number">409</span>)</span><br><span class="line">    at io.netty.util.concurrent.SingleThreadEventExecutor$<span class="number">5</span>.run(SingleThreadEventExecutor.java:<span class="number">858</span>)</span><br><span class="line">    at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:<span class="number">138</span>)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</span><br></pre></td></tr></table></figure>
+<li><p>arthas <figure class="highlight shell"><figcaption><span>thread -n 5```，发现redisson-netty-1-*这类线程占用cpu资源比较多，而且调用堆栈信息都是：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">```Java</span><br><span class="line">"redisson-netty-1-13" Id=51 cpuUsage=7% RUNNABLE (in native)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)</span><br><span class="line">    at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)</span><br><span class="line">    at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)</span><br><span class="line">    -  locked io.netty.channel.nio.SelectedSelectionKeySet@31f3c444</span><br><span class="line">    -  locked java.util.Collections$UnmodifiableSet@15dc8f75</span><br><span class="line">    -  locked sun.nio.ch.EPollSelectorImpl@405d0006</span><br><span class="line">    at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)</span><br><span class="line">    at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:62)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:753)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:409)</span><br><span class="line">    at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:858)</span><br><span class="line">    at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:138)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:745)</span><br></pre></td></tr></table></figure></p>
 </li>
-<li><p>在java2上执行packet peat抓包如图，但是java1, java4却没有抓包（主要考虑java1，java4 io较java2高）<br><img src="_v_images/20190116175455944_668045513.png" alt=""></p>
+<li><p>在java2上执行packet peat抓包如图，但是java1, java4却没有抓包（主要考虑java1，java4 io较java2高）<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116175455944_668045513.png?raw=true" alt=""></p>
 </li>
 <li><p>watch com.pupu.product.service.impl.ActivityEntityServiceImpl findActivityIdByStoreProduct “{params,returnObj}” -x 2并没有发现被4903这个key被频繁调用（应该是redisson-netty-1-*这类线程在底层频繁调用）</p>
 </li>
@@ -113,7 +112,7 @@
 </li>
 </ul>
 <h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>压测搜索接口，然后执行redis dump操作，执行过程接口压测不要停。</p>
-<h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="_v_images/20190116180244685_796430475.png" alt=""></p>
+<h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true" alt=""></p>
 <h4 id="待解决问题"><a href="#待解决问题" class="headerlink" title="待解决问题"></a>待解决问题</h4><ol>
 <li>是否和redis sentinel模式有关</li>
 <li>是否和客户端netty版本或者bug有关</li>
@@ -122,7 +121,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjqz0rhgy000480p4p2kokqmi" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjqz1b64f0003bmp4oepmnszf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>

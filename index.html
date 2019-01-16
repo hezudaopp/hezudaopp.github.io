@@ -95,10 +95,9 @@
 </li>
 <li><p>docker stats发现，出问题的三台机子product-service cpu都达到200%以上</p>
 </li>
-<li><p>arthas thread -n5，发现redisson-netty-1-*这类线程占用cpu资源比较多，而且调用堆栈信息都是：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"redisson-netty-1-13"</span> Id=<span class="number">51</span> cpuUsage=<span class="number">7</span>% RUNNABLE (in <span class="keyword">native</span>)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:<span class="number">269</span>)</span><br><span class="line">    at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:<span class="number">93</span>)</span><br><span class="line">    at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:<span class="number">86</span>)</span><br><span class="line">    -  locked io.netty.channel.nio.SelectedSelectionKeySet@<span class="number">31f</span>3c444</span><br><span class="line">    -  locked java.util.Collections$UnmodifiableSet@<span class="number">15</span>dc8f75</span><br><span class="line">    -  locked sun.nio.ch.EPollSelectorImpl@<span class="number">405</span>d0006</span><br><span class="line">    at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:<span class="number">97</span>)</span><br><span class="line">    at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:<span class="number">62</span>)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:<span class="number">753</span>)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:<span class="number">409</span>)</span><br><span class="line">    at io.netty.util.concurrent.SingleThreadEventExecutor$<span class="number">5</span>.run(SingleThreadEventExecutor.java:<span class="number">858</span>)</span><br><span class="line">    at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:<span class="number">138</span>)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:<span class="number">745</span>)</span><br></pre></td></tr></table></figure>
+<li><p>arthas <figure class="highlight shell"><figcaption><span>thread -n 5```，发现redisson-netty-1-*这类线程占用cpu资源比较多，而且调用堆栈信息都是：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">```Java</span><br><span class="line">"redisson-netty-1-13" Id=51 cpuUsage=7% RUNNABLE (in native)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)</span><br><span class="line">    at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)</span><br><span class="line">    at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)</span><br><span class="line">    -  locked io.netty.channel.nio.SelectedSelectionKeySet@31f3c444</span><br><span class="line">    -  locked java.util.Collections$UnmodifiableSet@15dc8f75</span><br><span class="line">    -  locked sun.nio.ch.EPollSelectorImpl@405d0006</span><br><span class="line">    at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)</span><br><span class="line">    at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:62)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:753)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:409)</span><br><span class="line">    at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:858)</span><br><span class="line">    at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:138)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:745)</span><br></pre></td></tr></table></figure></p>
 </li>
-<li><p>在java2上执行packet peat抓包如图，但是java1, java4却没有抓包（主要考虑java1，java4 io较java2高）<br><img src="_v_images/20190116175455944_668045513.png" alt=""></p>
+<li><p>在java2上执行packet peat抓包如图，但是java1, java4却没有抓包（主要考虑java1，java4 io较java2高）<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116175455944_668045513.png?raw=true" alt=""></p>
 </li>
 <li><p>watch com.pupu.product.service.impl.ActivityEntityServiceImpl findActivityIdByStoreProduct “{params,returnObj}” -x 2并没有发现被4903这个key被频繁调用（应该是redisson-netty-1-*这类线程在底层频繁调用）</p>
 </li>
@@ -107,7 +106,7 @@
 </li>
 </ul>
 <h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>压测搜索接口，然后执行redis dump操作，执行过程接口压测不要停。</p>
-<h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="_v_images/20190116180244685_796430475.png" alt=""></p>
+<h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true" alt=""></p>
 <h4 id="待解决问题"><a href="#待解决问题" class="headerlink" title="待解决问题"></a>待解决问题</h4><ol>
 <li>是否和redis sentinel模式有关</li>
 <li>是否和客户端netty版本或者bug有关</li>
@@ -116,7 +115,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjqz0rhgy000480p4p2kokqmi" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjqz1b64f0003bmp4oepmnszf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -159,7 +158,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqz0rhh1000880p4z573tal3" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqz1b64k0008bmp4xv36o716" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -202,7 +201,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqz0rhh5000b80p4if6sx8sn" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqz1b64h0005bmp4jk4yfl74" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -240,7 +239,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqz0rhgw000380p4gq24tack" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqz1b6480000bmp47ros6txg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -317,7 +316,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqz0rhh3000980p4tkm952nt" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqz1b64g0004bmp46j2b4mqa" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -358,7 +357,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqz0rhgz000580p4eappup6f" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqz1b64i0007bmp4z9bjrtwp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -402,7 +401,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqz0rhgs000180p4finv9uc5" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqz1b64c0001bmp474l26xhr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -440,7 +439,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqz0rhgl000080p4gyutudsc" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqz1b64m000abmp4wxobgxph" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
