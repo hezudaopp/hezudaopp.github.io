@@ -107,15 +107,12 @@
 </ul>
 <h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>压测搜索接口，然后执行redis dump操作，执行过程接口压测不要停。</p>
 <h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true" alt=""></p>
-<h4 id="待解决问题"><a href="#待解决问题" class="headerlink" title="待解决问题"></a>待解决问题</h4><ol>
-<li>是否和redis sentinel模式有关</li>
-<li>是否和客户端netty版本或者bug有关</li>
-</ol>
+<h4 id="确认问题"><a href="#确认问题" class="headerlink" title="确认问题"></a>确认问题</h4><p>使用RBatch时候才有如上问题，具体<a href="https://github.com/redisson/redisson/issues/1567" target="_blank" rel="noopener">issue链接</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjqz1b64f0003bmp4oepmnszf" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjrd4oacj0005zdp4ih33vuxn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -158,7 +155,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjqz1b64k0008bmp4xv36o716" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjrd4oacm0009zdp4atlo8ylu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -201,7 +198,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjqz1b64h0005bmp4jk4yfl74" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjrd4oach0003zdp46rxady9r" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -239,7 +236,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjqz1b6480000bmp47ros6txg" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjrd4oace0001zdp4qunc0kvc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -316,7 +313,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjqz1b64g0004bmp46j2b4mqa" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjrd4oacl0008zdp4cuw36341" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -357,7 +354,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjqz1b64i0007bmp4z9bjrtwp" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjrd4oaci0004zdp4e7vsb0k0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -401,7 +398,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjqz1b64c0001bmp474l26xhr" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjrd4oacn000bzdp4dlik4ppd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -439,7 +436,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjqz1b64m000abmp4wxobgxph" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjrd4oac90000zdp4y15cf7bm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
