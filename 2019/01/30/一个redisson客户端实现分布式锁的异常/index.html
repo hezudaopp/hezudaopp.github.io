@@ -5,15 +5,19 @@
   
 
   
-  <title>Archives: 2019 | 楚湘越水</title>
+  <title>一个redisson客户端实现分布式锁的异常 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/archives/2019/index.html">
+  <meta name="description" content="线上使用redis分布式锁偶发如下错误信息：12java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: 16c58397-66df-448d-aa46-c962ba4360bd thread-id: 306	at org.redisson.Red">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一个redisson客户端实现分布式锁的异常">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="线上使用redis分布式锁偶发如下错误信息：12java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: 16c58397-66df-448d-aa46-c962ba4360bd thread-id: 306	at org.redisson.Red">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-01-30T07:42:51.681Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="一个redisson客户端实现分布式锁的异常">
+<meta name="twitter:description" content="线上使用redis分布式锁偶发如下错误信息：12java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: 16c58397-66df-448d-aa46-c962ba4360bd thread-id: 306	at org.redisson.Red">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,154 +64,60 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/" class="archive-article-date">
-  <time datetime="2019-01-30T06:29:02.000Z" itemprop="datePublished">Jan 30</time>
+        <section id="main"><article id="post-一个redisson客户端实现分布式锁的异常" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/" class="article-date">
+  <time datetime="2019-01-30T06:29:02.000Z" itemprop="datePublished">2019-01-30</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
+    <h1 class="article-title" itemprop="name">
+      一个redisson客户端实现分布式锁的异常
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" class="archive-article-date">
-  <time datetime="2019-01-16T09:49:02.000Z" itemprop="datePublished">Jan 16</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/">redis server重启导致redisson client CPU和IO流量飙升问题</a>
-    </h1>
-  
+        <p>线上使用redis分布式锁偶发如下错误信息：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: <span class="number">16</span>c58397-<span class="number">66</span>df-<span class="number">448</span>d-aa46-c962ba4360bd thread-id: <span class="number">306</span></span><br><span class="line">	at org.redisson.RedissonLock.unlock(RedissonLock.java:<span class="number">367</span>) ~[redisson-<span class="number">3.5</span>.7.jar!/:na]</span><br></pre></td></tr></table></figure></p>
+<p>通过错误日志我们可以推断是由于lock和unlock不是同一个线程导致，那什么时候会出现lock和unlock不是同一个线程呢？<br>以下便是一种场景：</p>
+<ol>
+<li>线程1先拿到锁，但是业务执行时间超过锁自动超时时间 ，锁超时被自动释放</li>
+<li>线程2因为锁超时被释放后拿到了锁，开始执行业务</li>
+<li>线程1业务执行完成，尝试释放锁，但是这时候锁被线程2持有，于是报锁释放失败错误。( attempt to unlock lock, not locked by current thread)</li>
+<li>线程2正常释放自己持有的锁。</li>
+</ol>
+<p>使用redis实现分布锁释放锁时需要锁保护，只有持有锁的线程方可释放锁。<br>redis文档中推荐使用长随机的字符串（如UUID）来标志持有锁的client，redisson则使用nodeId（UUID）+threadId标志。</p>
 
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/09/基于枚举实现的单例/" class="archive-article-date">
-  <time datetime="2019-01-09T01:32:59.000Z" itemprop="datePublished">Jan 9</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/09/基于枚举实现的单例/">基于枚举实现的单例</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/09/构造者模式/" class="archive-article-date">
-  <time datetime="2019-01-09T01:29:28.000Z" itemprop="datePublished">Jan 9</time>
-</a>
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjrivzsoi00052lp4z2oc0zhr" class="article-share-link">Share</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/09/构造者模式/">构造者模式</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="archive-article-date">
-  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">Jan 7</time>
-</a>
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
-    </h1>
-  
-
-    </header>
+    </footer>
   </div>
-</article>
   
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/06/最终一致性落地/" class="archive-article-date">
-  <time datetime="2019-01-06T12:45:16.000Z" itemprop="datePublished">Jan 6</time>
-</a>
-      
+<nav id="article-nav">
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/06/最终一致性落地/">最终一致性落地</a>
-    </h1>
   
+    <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">redis server重启导致redisson client CPU和IO流量飙升问题</div>
+    </a>
+  
+</nav>
 
-    </header>
-  </div>
+  
 </article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/05/服务提供者框架的思考/" class="archive-article-date">
-  <time datetime="2019-01-05T12:06:03.000Z" itemprop="datePublished">Jan 5</time>
-</a>
-      
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/05/服务提供者框架的思考/">服务提供者框架的思考</a>
-    </h1>
-  
-
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
-
 
 </section>
         

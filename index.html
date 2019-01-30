@@ -62,6 +62,51 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-一个redisson客户端实现分布式锁的异常" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/" class="article-date">
+  <time datetime="2019-01-30T06:29:02.000Z" itemprop="datePublished">2019-01-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>线上使用redis分布式锁偶发如下错误信息：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: <span class="number">16</span>c58397-<span class="number">66</span>df-<span class="number">448</span>d-aa46-c962ba4360bd thread-id: <span class="number">306</span></span><br><span class="line">	at org.redisson.RedissonLock.unlock(RedissonLock.java:<span class="number">367</span>) ~[redisson-<span class="number">3.5</span>.7.jar!/:na]</span><br></pre></td></tr></table></figure></p>
+<p>通过错误日志我们可以推断是由于lock和unlock不是同一个线程导致，那什么时候会出现lock和unlock不是同一个线程呢？<br>以下便是一种场景：</p>
+<ol>
+<li>线程1先拿到锁，但是业务执行时间超过锁自动超时时间 ，锁超时被自动释放</li>
+<li>线程2因为锁超时被释放后拿到了锁，开始执行业务</li>
+<li>线程1业务执行完成，尝试释放锁，但是这时候锁被线程2持有，于是报锁释放失败错误。( attempt to unlock lock, not locked by current thread)</li>
+<li>线程2正常释放自己持有的锁。</li>
+</ol>
+<p>使用redis实现分布锁释放锁时需要锁保护，只有持有锁的线程方可释放锁。<br>redis文档中推荐使用长随机的字符串（如UUID）来标志持有锁的client，redisson则使用nodeId（UUID）+threadId标志。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjrivzsoi00052lp4z2oc0zhr" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-redis-server重启导致redisson-client-CPU和IO流量飙升问题" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" class="article-date">
@@ -107,12 +152,12 @@
 </ul>
 <h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>压测搜索接口，然后执行redis dump操作，执行过程接口压测不要停。</p>
 <h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true" alt=""></p>
-<h4 id="确认问题"><a href="#确认问题" class="headerlink" title="确认问题"></a>确认问题</h4><p>使用RBatch时候才有如上问题，具体<a href="https://github.com/redisson/redisson/issues/1567" target="_blank" rel="noopener">issue链接</a></p>
+<h4 id="确认问题"><a href="#确认问题" class="headerlink" title="确认问题"></a>确认问题</h4><p>使用RBatch时候才有如上问题，具体参考<a href="https://github.com/redisson/redisson/issues/1567" target="_blank" rel="noopener">issue</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjrd4oacj0005zdp4ih33vuxn" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjrivzsoh00042lp460yelak6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -155,7 +200,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjrd4oacm0009zdp4atlo8ylu" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjrivzsoj00082lp4ka673v6i" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -198,7 +243,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjrd4oach0003zdp46rxady9r" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjrivzson000c2lp4opf6rdfe" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -236,7 +281,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjrd4oace0001zdp4qunc0kvc" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjrivzsog00032lp4xt71hvzs" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -313,7 +358,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjrd4oacl0008zdp4cuw36341" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjrivzsok00092lp4e0n9t2az" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -354,7 +399,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjrd4oaci0004zdp4e7vsb0k0" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjrivzsom000b2lp46n9fjmph" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -398,7 +443,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjrd4oacn000bzdp4dlik4ppd" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjrivzsoc00012lp4el0e3ira" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -436,7 +481,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjrd4oac90000zdp4y15cf7bm" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjrivzso800002lp4lly1h7p9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
@@ -493,6 +538,10 @@
       <ul>
         
           <li>
+            <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
+          </li>
+        
+          <li>
             <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/">redis server重启导致redisson client CPU和IO流量飙升问题</a>
           </li>
         
@@ -506,10 +555,6 @@
         
           <li>
             <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
-          </li>
-        
-          <li>
-            <a href="/2019/01/06/最终一致性落地/">最终一致性落地</a>
           </li>
         
       </ul>
