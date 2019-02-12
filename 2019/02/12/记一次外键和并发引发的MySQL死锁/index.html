@@ -8,6 +8,7 @@
   <title>记一次外键和并发引发的MySQL死锁 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="线上错误日志线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisiti">
+<meta name="keywords" content="Hibernate,Deadlock,Innodb,JPA">
 <meta property="og:type" content="article">
 <meta property="og:title" content="记一次外键和并发引发的MySQL死锁">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/index.html">
@@ -15,7 +16,7 @@
 <meta property="og:description" content="线上错误日志线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisiti">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190212113347689_1865658982.png?raw=true">
-<meta property="og:updated_time" content="2019-02-12T04:07:18.834Z">
+<meta property="og:updated_time" content="2019-02-12T04:10:50.020Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="记一次外键和并发引发的MySQL死锁">
 <meta name="twitter:description" content="线上错误日志线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisiti">
@@ -118,9 +119,11 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjs18worm0013bop4gl1cxzl8" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjs1914pw0013dgp4u87yotcb" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
+
     </footer>
   </div>
   
@@ -149,7 +152,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
     </div>
   </div>
 
@@ -159,7 +162,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 10px;">Hibernate</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
+      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
     </div>
   </div>
 
