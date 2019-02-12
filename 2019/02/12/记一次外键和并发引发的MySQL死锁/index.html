@@ -5,15 +5,21 @@
   
 
   
-  <title>楚湘越水</title>
+  <title>记一次外键和并发引发的MySQL死锁 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/index.html">
+  <meta name="description" content="线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisitionExce">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记一次外键和并发引发的MySQL死锁">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisitionExce">
 <meta property="og:locale" content="default">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190212113347689_1865658982.png">
+<meta property="og:updated_time" content="2019-02-12T03:48:34.174Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="记一次外键和并发引发的MySQL死锁">
+<meta name="twitter:description" content="线上订单状态流转业务偶尔会报数据库MySQL错误1234567891011121314151617181920org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisitionExce">
+<meta name="twitter:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190212113347689_1865658982.png">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,9 +66,7 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-    <article id="post-记一次外键和并发引发的MySQL死锁" class="article article-type-post" itemscope="" itemprop="blogPost">
+        <section id="main"><article id="post-记一次外键和并发引发的MySQL死锁" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" class="article-date">
   <time datetime="2019-02-12T03:04:09.000Z" itemprop="datePublished">2019-02-12</time>
@@ -75,8 +79,8 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/02/12/记一次外键和并发引发的MySQL死锁/">记一次外键和并发引发的MySQL死锁</a>
+    <h1 class="article-title" itemprop="name">
+      记一次外键和并发引发的MySQL死锁
     </h1>
   
 
@@ -129,442 +133,19 @@
     </footer>
   </div>
   
-</article>
-
-
+    
+<nav id="article-nav">
   
-    <article id="post-一个redisson客户端实现分布式锁的异常" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/" class="article-date">
-  <time datetime="2019-01-30T06:29:02.000Z" itemprop="datePublished">2019-01-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
-    </h1>
+    <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">一个redisson客户端实现分布式锁的异常</div>
+    </a>
   
+</nav>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>线上使用redis分布式锁偶发如下错误信息：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">java.lang.IllegalMonitorStateException: attempt to unlock lock, not locked by current thread by node id: <span class="number">16</span>c58397-<span class="number">66</span>df-<span class="number">448</span>d-aa46-c962ba4360bd thread-id: <span class="number">306</span></span><br><span class="line">	at org.redisson.RedissonLock.unlock(RedissonLock.java:<span class="number">367</span>) ~[redisson-<span class="number">3.5</span>.7.jar!/:na]</span><br></pre></td></tr></table></figure></p>
-<p>通过错误日志我们可以推断是由于lock和unlock不是同一个线程导致，那什么时候会出现lock和unlock不是同一个线程呢？<br>以下便是一种场景：</p>
-<ol>
-<li>线程1先拿到锁，但是业务执行时间超过锁自动超时时间 ，锁超时被自动释放</li>
-<li>线程2因为锁超时被释放后拿到了锁，开始执行业务</li>
-<li>线程1业务执行完成，尝试释放锁，但是这时候锁被线程2持有，于是报锁释放失败错误。( attempt to unlock lock, not locked by current thread)</li>
-<li>线程2正常释放自己持有的锁。</li>
-</ol>
-<p>使用redis实现分布锁释放锁时需要锁保护，只有持有锁的线程方可释放锁。<br>redis文档中推荐使用长随机的字符串（如UUID）来标志持有锁的client，redisson则使用nodeId（UUID）+threadId标志。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjs18admc00096rp4c1j4uzkn" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
   
 </article>
-
-
-  
-    <article id="post-redis-server重启导致redisson-client-CPU和IO流量飙升问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" class="article-date">
-  <time datetime="2019-01-16T09:49:02.000Z" itemprop="datePublished">2019-01-16</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/">redis server重启导致redisson client CPU和IO流量飙升问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="现象："><a href="#现象：" class="headerlink" title="现象："></a>现象：</h4><p>java1, java2, java4 cpu上升并且与redis的IO流量飙升，飙升之后没有下降趋势且趋于稳定</p>
-<p>java3指标正常是因为java3的dubbo服务被禁用。</p>
-<h4 id="分析："><a href="#分析：" class="headerlink" title="分析："></a>分析：</h4><ul>
-<li><p>出问题的时间点scheduled在启动（应该是巧合，第二天晚上重新尝试重启scheduled无法重现，而且从业务上说也解释不通。）</p>
-</li>
-<li><p>出问题的时间点同时出现redis connect timeout错误（需确认那个时间点是否有操作redis server dump？）</p>
-</li>
-<li><p>java1,java2,java4 cpu指标差不多，但是input/output流量却相差较多，并且input/output比率也相差较大(以此推断，这三个机子执行的redis命令可能并不相同)</p>
-</li>
-<li><p>docker stats发现，出问题的三台机子product-service cpu都达到200%以上</p>
-</li>
-<li><p>arthas <figure class="highlight shell"><figcaption><span>thread -n 5```，发现redisson-netty-1-*这类线程占用cpu资源比较多，而且调用堆栈信息都是：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">```Java</span><br><span class="line">"redisson-netty-1-13" Id=51 cpuUsage=7% RUNNABLE (in native)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)</span><br><span class="line">    at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)</span><br><span class="line">    at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)</span><br><span class="line">    at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)</span><br><span class="line">    -  locked io.netty.channel.nio.SelectedSelectionKeySet@31f3c444</span><br><span class="line">    -  locked java.util.Collections$UnmodifiableSet@15dc8f75</span><br><span class="line">    -  locked sun.nio.ch.EPollSelectorImpl@405d0006</span><br><span class="line">    at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)</span><br><span class="line">    at io.netty.channel.nio.SelectedSelectionKeySetSelector.select(SelectedSelectionKeySetSelector.java:62)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.select(NioEventLoop.java:753)</span><br><span class="line">    at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:409)</span><br><span class="line">    at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:858)</span><br><span class="line">    at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:138)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:745)</span><br></pre></td></tr></table></figure></p>
-</li>
-<li><p>在java2上执行packet peat抓包如图，但是java1, java4却没有抓包（主要考虑java1，java4 io较java2高）<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116175455944_668045513.png?raw=true" alt=""></p>
-</li>
-<li><p>watch com.pupu.product.service.impl.ActivityEntityServiceImpl findActivityIdByStoreProduct “{params,returnObj}” -x 2并没有发现被4903这个key被频繁调用（应该是redisson-netty-1-*这类线程在底层频繁调用）</p>
-</li>
-<li><p>java2: jmap -histo 信息</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">root@prod-java-2:/# jmap -histo 1 | head -50</span><br><span class="line"></span><br><span class="line"> num     #instances         #bytes  class name</span><br><span class="line">----------------------------------------------</span><br><span class="line">   <span class="number">1</span>:       <span class="number">6058560</span>      <span class="number">663009504</span>  [C</span><br><span class="line">   <span class="number">2</span>:       <span class="number">1116359</span>      <span class="number">388823592</span>  [I</span><br><span class="line">   <span class="number">3</span>:       <span class="number">5718247</span>      <span class="number">182983904</span>  io.netty.util.Recycler$DefaultHandle</span><br><span class="line">   <span class="number">4</span>:       <span class="number">5684865</span>      <span class="number">181915680</span>  io.netty.buffer.PoolThreadCache$MemoryRegionCache$Entry</span><br><span class="line">   <span class="number">5</span>:        <span class="number">101042</span>      <span class="number">169851384</span>  [J</span><br><span class="line">   <span class="number">6</span>:       <span class="number">2029037</span>      <span class="number">156812456</span>  [Ljava.lang.Object;</span><br><span class="line">   <span class="number">7</span>:       <span class="number">6411509</span>      <span class="number">153876216</span>  java.lang.String</span><br><span class="line">   <span class="number">8</span>:        <span class="number">181216</span>       <span class="number">75385856</span>  rx.internal.util.unsafe.SpscLinkedQueue</span><br><span class="line">   <span class="number">9</span>:       <span class="number">2157774</span>       <span class="number">69048768</span>  java.util.HashMap$Node</span><br><span class="line">  <span class="number">10</span>:        <span class="number">719111</span>       <span class="number">63281768</span>  org.apache.catalina.session.StandardSession</span><br><span class="line">  <span class="number">11</span>:        <span class="number">722043</span>       <span class="number">60966008</span>  [Ljava.util.concurrent.ConcurrentHashMap$Node;</span><br><span class="line">  <span class="number">12</span>:        <span class="number">521270</span>       <span class="number">60829712</span>  [B</span><br><span class="line">  <span class="number">13</span>:       <span class="number">1672912</span>       <span class="number">53533184</span>  java.util.concurrent.ConcurrentHashMap$Node</span><br><span class="line">  <span class="number">14</span>:        <span class="number">629204</span>       <span class="number">50322752</span>  [S</span><br><span class="line">  <span class="number">15</span>:        <span class="number">285276</span>       <span class="number">50208576</span>  rx.internal.util.unsafe.SpscUnboundedArrayQueue</span><br><span class="line">  <span class="number">16</span>:        <span class="number">724410</span>       <span class="number">47073520</span>  [Ljava.util.Hashtable$Entry;</span><br><span class="line">  <span class="number">17</span>:        <span class="number">735279</span>       <span class="number">47057856</span>  java.util.concurrent.ConcurrentHashMap</span><br><span class="line">  <span class="number">18</span>:        <span class="number">724250</span>       <span class="number">34764000</span>  java.util.Hashtable</span><br><span class="line">  <span class="number">19</span>:        <span class="number">550168</span>       <span class="number">26408064</span>  org.hibernate.hql.internal.ast.tree.Node</span><br><span class="line">  <span class="number">20</span>:       <span class="number">1005209</span>       <span class="number">24125016</span>  java.util.ArrayList</span><br><span class="line">  <span class="number">21</span>:        <span class="number">719446</span>       <span class="number">23022272</span>  com.pupu.core.dto.web.JwtUser</span><br><span class="line">  <span class="number">22</span>:        <span class="number">719446</span>       <span class="number">23022272</span>  org.springframework.security.authentication.UsernamePasswordAuthenticationToken</span><br><span class="line">  <span class="number">23</span>:        <span class="number">148872</span>       <span class="number">22774848</span>  [Ljava.util.HashMap$Node;</span><br><span class="line">  <span class="number">24</span>:         <span class="number">56908</span>       <span class="number">22307936</span>  com.pupu.product.domain.Product</span><br><span class="line">  <span class="number">25</span>:       <span class="number">1246184</span>       <span class="number">19938944</span>  java.lang.Integer</span><br><span class="line">  <span class="number">26</span>:        <span class="number">616861</span>       <span class="number">19739552</span>  java.util.LinkedList</span><br><span class="line">  <span class="number">27</span>:        <span class="number">719446</span>       <span class="number">17266704</span>  org.springframework.security.web.authentication.WebAuthenticationDetails</span><br><span class="line">  <span class="number">28</span>:        <span class="number">719124</span>       <span class="number">17258976</span>  java.beans.PropertyChangeSupport</span><br><span class="line">  <span class="number">29</span>:        <span class="number">285294</span>       <span class="number">15976464</span>  rx.internal.operators.OperatorMerge$InnerSubscriber</span><br><span class="line">  <span class="number">30</span>:        <span class="number">635026</span>       <span class="number">15240624</span>  java.util.LinkedList$Node</span><br><span class="line">  <span class="number">31</span>:        <span class="number">235563</span>       <span class="number">15076032</span>  org.hibernate.hql.internal.ast.tree.ParameterNode</span><br><span class="line">  <span class="number">32</span>:        <span class="number">621381</span>       <span class="number">14913144</span>  java.util.concurrent.ConcurrentHashMap$KeySetView</span><br><span class="line">  <span class="number">33</span>:        <span class="number">580886</span>       <span class="number">13941264</span>  rx.internal.util.SubscriptionList</span><br><span class="line">  <span class="number">34</span>:        <span class="number">285276</span>       <span class="number">13693248</span>  rx.subjects.UnicastSubject$State</span><br><span class="line">  <span class="number">35</span>:        <span class="number">201222</span>       <span class="number">12878208</span>  java.nio.DirectByteBuffer</span><br><span class="line">  <span class="number">36</span>:        <span class="number">263905</span>       <span class="number">12667440</span>  java.util.HashMap</span><br><span class="line">  <span class="number">37</span>:        <span class="number">719124</span>       <span class="number">11505984</span>  java.beans.PropertyChangeSupport$PropertyChangeListenerMap</span><br><span class="line">  <span class="number">38</span>:        <span class="number">719113</span>       <span class="number">11505808</span>  org.springframework.security.core.context.SecurityContextImpl</span><br><span class="line">  <span class="number">39</span>:        <span class="number">719111</span>       <span class="number">11505776</span>  org.apache.catalina.session.StandardSessionFacade</span><br><span class="line">  <span class="number">40</span>:        <span class="number">445994</span>       <span class="number">10703856</span>  java.lang.Long</span><br><span class="line">  <span class="number">41</span>:        <span class="number">115756</span>       <span class="number">10186528</span>  java.lang.reflect.Method</span><br><span class="line">  <span class="number">42</span>:        <span class="number">561581</span>        <span class="number">8985296</span>  java.util.concurrent.atomic.AtomicReference</span><br><span class="line">  <span class="number">43</span>:        <span class="number">181216</span>        <span class="number">8698368</span>  rx.internal.operators.OperatorScan$<span class="number">3</span></span><br><span class="line">  <span class="number">44</span>:        <span class="number">181216</span>        <span class="number">8698368</span>  rx.internal.operators.OperatorScan$InitialProducer</span><br><span class="line">  <span class="number">45</span>:        <span class="number">181216</span>        <span class="number">8698368</span>  rx.internal.operators.OperatorSkip$<span class="number">1</span></span><br><span class="line">  <span class="number">46</span>:        <span class="number">195256</span>        <span class="number">7810240</span>  java.util.LinkedHashMap$Entry</span><br><span class="line">  <span class="number">47</span>:        <span class="number">235808</span>        <span class="number">7545856</span>  org.hibernate.engine.query.spi.NamedParameterDescriptor</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>压测搜索接口，然后执行redis dump操作，执行过程接口压测不要停。</p>
-<h4 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h4><p>压测搜索接口，执行redis sleep操作，无法重现问题；执行docker restart redis，可以重现。即使停掉压测接口，流量还是没有下降。<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190116180244685_796430475.png?raw=true" alt=""></p>
-<h4 id="确认问题"><a href="#确认问题" class="headerlink" title="确认问题"></a>确认问题</h4><p>使用RBatch时候才有如上问题，具体参考<a href="https://github.com/redisson/redisson/issues/1567" target="_blank" rel="noopener">issue</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjs18adm700036rp4idtfoyig" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-基于枚举实现的单例" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/09/基于枚举实现的单例/" class="article-date">
-  <time datetime="2019-01-09T01:32:59.000Z" itemprop="datePublished">2019-01-09</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/09/基于枚举实现的单例/">基于枚举实现的单例</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>相较于类公有final域和静态构造方法实现的单例，基于枚举实现的单例更加安全：</p>
-<ul>
-<li>无法通过反射将构造函数Accessible设置为public。</li>
-<li>对于可序列化的类，无需实现重写readObject方法。</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjs18admb00086rp4cu6lpnby" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-构造者模式" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/09/构造者模式/" class="article-date">
-  <time datetime="2019-01-09T01:29:28.000Z" itemprop="datePublished">2019-01-09</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/09/构造者模式/">构造者模式</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>两点：</p>
-<ul>
-<li>实现具名可选参数功能</li>
-<li>可将实例私有域声明为final</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjs18adme000c6rp4m3v08fts" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-APM系统在线程间共享追踪链路数据问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="article-date">
-  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">2019-01-07</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjs18adm800046rp4b54iic2v" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-最终一致性落地" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/06/最终一致性落地/" class="article-date">
-  <time datetime="2019-01-06T12:45:16.000Z" itemprop="datePublished">2019-01-06</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/06/最终一致性落地/">最终一致性落地</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="1-基于重试的最终一致性（不考虑业务逆操作）"><a href="#1-基于重试的最终一致性（不考虑业务逆操作）" class="headerlink" title="1. 基于重试的最终一致性（不考虑业务逆操作）"></a>1. 基于重试的最终一致性（不考虑业务逆操作）</h4><h5 id="1-1-退单业务为例"><a href="#1-1-退单业务为例" class="headerlink" title="1.1. 退单业务为例"></a>1.1. 退单业务为例</h5><ol>
-<li>生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为<code>开始成功</code>（事务协调器执行）</li>
-<li>异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行）</li>
-<li>消费第二步的消息，更新全局事务log表，状态设置为<code>第一阶段成功</code>（事务协调器执行）</li>
-<li>异步执行回库业务（需要保证幂等性），发同步消息队列（send ack）通知事务协调器第四步成功（商品服务执行）</li>
-<li>消费第四步的消息，更新全局事务log表，状态设置为<code>第二阶段成功</code>（事务协调器执行）</li>
-</ol>
-<h5 id="1-2-失败分析"><a href="#1-2-失败分析" class="headerlink" title="1.2. 失败分析"></a>1.2. 失败分析</h5><ol>
-<li>第一步失败，不做操作。</li>
-<li>第二步失败，异常回滚，发同步消息队列（send ack）通知事务协调器第二步失败，事务状态设置为<code>第一阶段失败</code></li>
-<li>第三步失败，也就是说第二步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
-<li>第四步失败，两种方案<ul>
-<li>调用第二步逆操作方法（该方案需要考虑该步失败情况，暂不考虑）</li>
-<li>定时轮询全局事务log表中状态为<code>第一阶段成功</code>的记录，重发消息重试第四步。</li>
-</ul>
-</li>
-<li>第五步失败，也就是说第四步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
-</ol>
-<h5 id="1-3-重试说明"><a href="#1-3-重试说明" class="headerlink" title="1.3. 重试说明"></a>1.3. 重试说明</h5><ul>
-<li>所有重试操作需要记录重试次数，超过一定次数后需人工介入</li>
-<li>所有重试操作都需要保证幂等性。<ul>
-<li>事务状态更新的幂等性：通过乐观锁保证</li>
-<li>业务逻辑的幂等性，如果要统一处理，可以在业务方数据库添加一张额外的日志表，用主键约束保证</li>
-</ul>
-</li>
-</ul>
-<h5 id="1-4-消息队列说明"><a href="#1-4-消息队列说明" class="headerlink" title="1.4. 消息队列说明"></a>1.4. 消息队列说明</h5><ul>
-<li>业务方发送同步消息，需要发送成功确认，确保消息已经投递到消息队列。如果消息失败，则业务方事务回滚。</li>
-<li>重试的消息，不应该影响阻塞正常消息的消费。</li>
-</ul>
-<h5 id="1-5-事务状态流转"><a href="#1-5-事务状态流转" class="headerlink" title="1.5. 事务状态流转"></a>1.5. 事务状态流转</h5><ul>
-<li>表设计：<ul>
-<li>transacion: id, current_span_id, current_node, status, service_type, time_create, time_update</li>
-<li>transaction_span: id, transaction_id, parent_span_id, node, retry_times, status, time_create</li>
-</ul>
-</li>
-<li>流程图<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 事务开始</span><br><span class="line">op_1=&gt;operation: 1：事务初始化</span><br><span class="line">io_1_yes=&gt;inputoutput: 事务初始化成功</span><br><span class="line">op_2=&gt;operation: 2：执行退单业务</span><br><span class="line">io_2_yes=&gt;inputoutput: 退单成功</span><br><span class="line">op_3=&gt;operation: 3：更新事务状态</span><br><span class="line">io_3_yes=&gt;inputoutput: ack退单成功</span><br><span class="line">op_4=&gt;operation: 4：执行回库业务</span><br><span class="line">io_4_yes=&gt;inputoutput: 回库成功</span><br><span class="line">op_5=&gt;operation: 5：更新事务状态</span><br><span class="line">io_5_yes=&gt;inputoutput: ack回库成功</span><br><span class="line">e=&gt;end: 事务结束</span><br><span class="line">cond_1=&gt;condition: 成功？</span><br><span class="line">cond_2=&gt;condition: 成功？</span><br><span class="line">cond_3=&gt;condition: 成功？</span><br><span class="line">cond_4=&gt;condition: 成功？</span><br><span class="line">cond_5=&gt;condition: 成功？</span><br><span class="line">op_2_no=&gt;operation: 回滚</span><br><span class="line">io_2_no=&gt;inputoutput: 执行退单业务失败</span><br><span class="line">op_3_no=&gt;operation: 重试</span><br><span class="line">op_4_no=&gt;operation: 重试</span><br><span class="line">op_5_no=&gt;operation: 重试</span><br><span class="line">st-&gt;op_1-&gt;cond_1(yes)-&gt;io_1_yes-&gt;op_2-&gt;cond_2(yes)-&gt;io_2_yes-&gt;op_3-&gt;cond_3(yes)-&gt;io_3_yes-&gt;op_4-&gt;cond_4(yes)-&gt;io_4_yes-&gt;op_5-&gt;cond_5(yes)-&gt;io_5_yes(right)-&gt;e</span><br><span class="line">cond_1(no)-&gt;e</span><br><span class="line">cond_2(no)-&gt;op_2_no(right)-&gt;e</span><br><span class="line">cond_3(no)-&gt;op_3_no(right)-&gt;op_3</span><br><span class="line">cond_4(no)-&gt;op_4_no(right)-&gt;op_4</span><br><span class="line">cond_5(no)-&gt;op_5_no(right)-&gt;op_5</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjs18admd000b6rp47eifbwbu" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-服务提供者框架的思考" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/05/服务提供者框架的思考/" class="article-date">
-  <time datetime="2019-01-05T12:06:03.000Z" itemprop="datePublished">2019-01-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/05/服务提供者框架的思考/">服务提供者框架的思考</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>服务提供者框架具体实现就不多说，主要有个问题，为何在服务提供者框架中提供者不可少？也就是说如果把提供者注册API注册不是Prodiver，而是Service有何不妥？这样的实现不也是多态的吗？</p>
-<p>私人愚见，主要问题在于：如果通过不同Service接口的实现类的静态工厂方法或者构造函数来返回对象，那么注册Service的类必须依赖所有的Service实现类，因为静态方法不支持多态，而构造函数的话需要依赖具体实现类。如此，在编写注册类的时候，Service的实现就必须存在。这违背了<strong>对添加开放，对修改封闭</strong>原则，每次新增一种Service实现都需要去改变注册类的实现，而且，在编写注册类代码时，是不会知道有多少种Service的实现。</p>
-<p>服务提供者框架目标是<strong>依赖反转</strong>（Dependency Reverse），如果说每新增一种Service，都需要修改注册类的代码，服务提供者框架实现也就不太可靠的。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjs18adm900056rp4mqvsmht4" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-Executor-Service内存泄漏" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/12/28/Executor-Service内存泄漏/" class="article-date">
-  <time datetime="2018-12-28T12:50:22.000Z" itemprop="datePublished">2018-12-28</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/28/Executor-Service内存泄漏/">Executor Service内存泄漏</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>线上某台主机的内存吃满，通过docker stats –no-stream查看该主机微服务的情况，发现其中一个微服务的内存竟然吃掉了7g多，但是该微服务配置的Xms和Xmx都是4g，初步断定是堆外内存泄漏，因为堆外内存JVM是不负责回收。</p>
-<p>JVM的NIO的Channel和Buffer就用到堆外内存，这部分内存并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域，如果使用不当，可能会导致OutOfMemoryError异常。</p>
-<p>查看错误日志，发现如下信息<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.OutOfMemoryError    ERROR    java.lang.OutOfMemoryError: unable to create <span class="keyword">new</span> <span class="keyword">native</span> thread</span><br></pre></td></tr></table></figure></p>
-<p>看来调用Native函数分配线程内存时出错，回想昨晚新发布的代码，跟线程有关的就是有个方法使用了局部变量引用ThreadPoolExecutor分配的线程池，而该线程池在方法结束之前没有调用ExecutorServie的shutdown方法释放线程池导致内存泄漏。</p>
-<p><em>其实线程池的用法应该是常驻内存，而不应该作为局部变量使用，否则会频繁的申请释放线程池而影响程序性能。</em></p>
-<p><em>另外，由于Docker容器没有做内存限制，如果某个Docker服务出现内存泄漏，就有可能吃掉整台主机的内存。</em></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjs18adm300016rp4arpyr0vo" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-Hibernate持久化上下文对象同一性问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/12/26/Hibernate持久化上下文对象同一性问题/" class="article-date">
-  <time datetime="2018-12-26T12:56:07.000Z" itemprop="datePublished">2018-12-26</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/26/Hibernate持久化上下文对象同一性问题/">Hibernate持久化上下文对象同一性问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjs18adly00006rp4cfhnkym0" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
 
 </section>
         
