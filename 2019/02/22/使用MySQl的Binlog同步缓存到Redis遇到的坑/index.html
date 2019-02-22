@@ -5,17 +5,20 @@
   
 
   
-  <title>APM系统在线程间共享追踪链路数据问题 | 楚湘越水</title>
+  <title>基于Canal同步MySQL Binlog到Redis踩到的坑 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="keywords" content="APM,ThreadLocal,Zipkin">
+  <meta name="description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
+<meta name="keywords" content="MySQL,Binlog,Redis,Canal,RabbitMQ">
 <meta property="og:type" content="article">
-<meta property="og:title" content="APM系统在线程间共享追踪链路数据问题">
-<meta property="og:url" content="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/index.html">
+<meta property="og:title" content="基于Canal同步MySQL Binlog到Redis踩到的坑">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-01-07T02:02:51.396Z">
+<meta property="og:updated_time" content="2019-02-22T16:04:06.538Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="APM系统在线程间共享追踪链路数据问题">
+<meta name="twitter:title" content="基于Canal同步MySQL Binlog到Redis踩到的坑">
+<meta name="twitter:description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -62,10 +65,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-APM系统在线程间共享追踪链路数据问题" class="article article-type-post" itemscope="" itemprop="blogPost">
+        <section id="main"><article id="post-使用MySQl的Binlog同步缓存到Redis遇到的坑" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="article-date">
-  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">2019-01-07</time>
+    <a href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" class="article-date">
+  <time datetime="2019-02-22T14:43:04.000Z" itemprop="datePublished">2019-02-22</time>
 </a>
     
   </div>
@@ -76,7 +79,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      APM系统在线程间共享追踪链路数据问题
+      基于Canal同步MySQL Binlog到Redis踩到的坑
     </h1>
   
 
@@ -84,14 +87,50 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h4 id="方案引入"><a href="#方案引入" class="headerlink" title="方案引入"></a>方案引入</h4><p>分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还约定业务代码中尽量不进行缓存写操作，只需写数据库，然后让这套系统自动同步缓存。如此一来，便可统一缓存的写处理逻辑。</p>
+<h4 id="方案实施"><a href="#方案实施" class="headerlink" title="方案实施"></a>方案实施</h4><ul>
+<li>如何在缓存未命中情况下回写缓存</li>
+</ul>
+<p>在业务代码中，如果从缓存中未读到数据，但是在数据中读到数据，此时不直接去写缓存，而是交由消息队列去处理（保证时序性）。考虑如下场景，</p>
+<ol>
+<li>业务代码1数据库写入一条新的记录，系统开始自动去同步缓存（同步有延迟，未完成同步）</li>
+<li>业务代码2此时读缓存，因缓存未同步完成，又去数据库读，读到该条记录</li>
+<li>业务代码3直接去数据库更新该条记录（同步有延迟，未完成同步）</li>
+<li>步骤1和步骤3相继同步缓存完成</li>
+<li>业务代码2写缓存成功</li>
+</ol>
+<p>该场景下，业务代码2的缓存覆盖了业务代码3的缓存，这时候缓存数据和数据库数据是不一致的。因此，我们将同一个消息队列的消息分为两类，又Binlog日志产生的消息和缓存未命中回写缓存的消息。如果是第一类消息，直接执行写缓存操作；如果是第二类消息，调用Redis的setnx原子操作，即只能缓存不存在的情况才能执行写操作。因为Binlog日志的时序性，我们只要保证Binlog日志转换而来的消息的生产者和消费者的时序性，即可保证缓存和数据库的一致性。</p>
+<ul>
+<li><p>如何保证缓存同步消息的生产者和消费者的时序性</p>
+<ul>
+<li>生产者的时序性由Canal保证，为了做到串行消费Binlog，Canal采用冷备的方式实现HA（无论是Canal Server还是Canal Client）</li>
+<li>消息队列可以通过串行消费消息来保证时序性（RabbitMQ设置队列Exclusive属性为true）</li>
+</ul>
+</li>
+<li><p>如何降低缓存同步的延迟</p>
+</li>
+</ul>
+<p>为了保证消息的串行消费，无法通过添加RabbitMQ Consumer的方式来提供消费速率。为了防止消费速度低于生产速度产生消息积压而导致缓存同步延迟，我们避免在消费端处理重业务，只处理轻量级的缓存写操作，如果确实要处理重业务，要不异步处理，要不转发到其他消息队列处理。</p>
+<ul>
+<li>如何验证该方案的性能及可靠性</li>
+</ul>
+<p>为了验证该方案的可行性，我们从生产导出一天的Binlog日志，然后将这一天的Binlog全部导入压测数据由此产生大量的消息。我们发现，单个消息队列中的消息生产速率大概在1000条/s，而消费速率几乎与生产速率保持相同的水平（实际上消费速率上限应该是大于生产速率，MySQL，Canal，或者RabbitMQ的写性能才要低于Redis的写性能），并且日志导入过程几乎没有发现任何的错误日志。在日志导入结束后，我们抽样验证MySQL和Redis数据的一致性，未发现不一致数据。</p>
+<h4 id="方案踩的坑"><a href="#方案踩的坑" class="headerlink" title="方案踩的坑"></a>方案踩的坑</h4><p>假设如下场景：</p>
+<ol>
+<li>业务1写入一条新记录到数据库中，然后同步该记录到缓存</li>
+<li>业务2读取缓存数据（此时是业务1写入的缓存）</li>
+<li>业务3更新了数据库中该记录的状态</li>
+<li>业务2根据缓存取到的数据，更新后写入到数据库中（覆盖了业务3更新的状态）</li>
+</ol>
+<p>在该场景下，业务2不应该从缓存中读数据，而应该从数据库读数据，因为业务2要进行写库操作。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjsg8y5d50004gpp4nhxvu2r1" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjsg8y5d00001gpp4e5b9kh83" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
 
     </footer>
   </div>
@@ -99,19 +138,10 @@
     
 <nav id="article-nav">
   
-    <a href="/2019/01/09/构造者模式/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          构造者模式
-        
-      </div>
-    </a>
   
-  
-    <a href="/2019/01/06/最终一致性落地/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">最终一致性落地</div>
+      <div class="article-nav-title">记一次外键和并发引发的MySQL死锁</div>
     </a>
   
 </nav>

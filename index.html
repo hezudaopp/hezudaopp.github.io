@@ -62,6 +62,80 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-使用MySQl的Binlog同步缓存到Redis遇到的坑" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" class="article-date">
+  <time datetime="2019-02-22T14:43:04.000Z" itemprop="datePublished">2019-02-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/">基于Canal同步MySQL Binlog到Redis踩到的坑</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="方案引入"><a href="#方案引入" class="headerlink" title="方案引入"></a>方案引入</h4><p>分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还约定业务代码中尽量不进行缓存写操作，只需写数据库，然后让这套系统自动同步缓存。如此一来，便可统一缓存的写处理逻辑。</p>
+<h4 id="方案实施"><a href="#方案实施" class="headerlink" title="方案实施"></a>方案实施</h4><ul>
+<li>如何在缓存未命中情况下回写缓存</li>
+</ul>
+<p>在业务代码中，如果从缓存中未读到数据，但是在数据中读到数据，此时不直接去写缓存，而是交由消息队列去处理（保证时序性）。考虑如下场景，</p>
+<ol>
+<li>业务代码1数据库写入一条新的记录，系统开始自动去同步缓存（同步有延迟，未完成同步）</li>
+<li>业务代码2此时读缓存，因缓存未同步完成，又去数据库读，读到该条记录</li>
+<li>业务代码3直接去数据库更新该条记录（同步有延迟，未完成同步）</li>
+<li>步骤1和步骤3相继同步缓存完成</li>
+<li>业务代码2写缓存成功</li>
+</ol>
+<p>该场景下，业务代码2的缓存覆盖了业务代码3的缓存，这时候缓存数据和数据库数据是不一致的。因此，我们将同一个消息队列的消息分为两类，又Binlog日志产生的消息和缓存未命中回写缓存的消息。如果是第一类消息，直接执行写缓存操作；如果是第二类消息，调用Redis的setnx原子操作，即只能缓存不存在的情况才能执行写操作。因为Binlog日志的时序性，我们只要保证Binlog日志转换而来的消息的生产者和消费者的时序性，即可保证缓存和数据库的一致性。</p>
+<ul>
+<li><p>如何保证缓存同步消息的生产者和消费者的时序性</p>
+<ul>
+<li>生产者的时序性由Canal保证，为了做到串行消费Binlog，Canal采用冷备的方式实现HA（无论是Canal Server还是Canal Client）</li>
+<li>消息队列可以通过串行消费消息来保证时序性（RabbitMQ设置队列Exclusive属性为true）</li>
+</ul>
+</li>
+<li><p>如何降低缓存同步的延迟</p>
+</li>
+</ul>
+<p>为了保证消息的串行消费，无法通过添加RabbitMQ Consumer的方式来提供消费速率。为了防止消费速度低于生产速度产生消息积压而导致缓存同步延迟，我们避免在消费端处理重业务，只处理轻量级的缓存写操作，如果确实要处理重业务，要不异步处理，要不转发到其他消息队列处理。</p>
+<ul>
+<li>如何验证该方案的性能及可靠性</li>
+</ul>
+<p>为了验证该方案的可行性，我们从生产导出一天的Binlog日志，然后将这一天的Binlog全部导入压测数据由此产生大量的消息。我们发现，单个消息队列中的消息生产速率大概在1000条/s，而消费速率几乎与生产速率保持相同的水平（实际上消费速率上限应该是大于生产速率，MySQL，Canal，或者RabbitMQ的写性能才要低于Redis的写性能），并且日志导入过程几乎没有发现任何的错误日志。在日志导入结束后，我们抽样验证MySQL和Redis数据的一致性，未发现不一致数据。</p>
+<h4 id="方案踩的坑"><a href="#方案踩的坑" class="headerlink" title="方案踩的坑"></a>方案踩的坑</h4><p>假设如下场景：</p>
+<ol>
+<li>业务1写入一条新记录到数据库中，然后同步该记录到缓存</li>
+<li>业务2读取缓存数据（此时是业务1写入的缓存）</li>
+<li>业务3更新了数据库中该记录的状态</li>
+<li>业务2根据缓存取到的数据，更新后写入到数据库中（覆盖了业务3更新的状态）</li>
+</ol>
+<p>在该场景下，业务2不应该从缓存中读数据，而应该从数据库读数据，因为业务2要进行写库操作。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjsg8y5d00001gpp4e5b9kh83" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-记一次外键和并发引发的MySQL死锁" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" class="article-date">
@@ -114,7 +188,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjs1914pw0013dgp4u87yotcb" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjsg8y5dl0015gpp4ccb2r65g" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
@@ -161,7 +235,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjs1914pi0005dgp4p48g9ldg" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjsg8y5cv0000gpp4nk3ci1u4" class="article-share-link">Share</a>
       
       
     </footer>
@@ -221,7 +295,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjs1914ph0004dgp41jisfbkf" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjsg8y5dh0012gpp4oqtc4e98" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -264,7 +338,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjs1914pl000adgp4jvyrlift" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjsg8y5d10002gpp4bki671mo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -307,7 +381,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjs1914pm000bdgp4d19qpwji" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjsg8y5d70006gpp4wvk1h8ce" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -345,7 +419,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjs1914p80000dgp4bj4z74u4" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjsg8y5d50004gpp4nhxvu2r1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -422,7 +496,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjs1914pj0007dgp42u4nzqik" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjsg8y5d60005gpp4h8kkefvt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -463,7 +537,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjs1914pk0008dgp41w7dhx0c" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cjsg8y5d90008gpp4cmjthf6z" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -507,7 +581,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjs1914pd0001dgp48o4s01zt" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cjsg8y5dk0014gpp4s1s352g4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
@@ -519,45 +593,12 @@
 
 
   
-    <article id="post-Hibernate持久化上下文对象同一性问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/12/26/Hibernate持久化上下文对象同一性问题/" class="article-date">
-  <time datetime="2018-12-26T12:56:07.000Z" itemprop="datePublished">2018-12-26</time>
-</a>
+
+
+  <nav id="page-nav">
     
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/26/Hibernate持久化上下文对象同一性问题/">Hibernate持久化上下文对象同一性问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="cjs1914pg0003dgp46thpai25" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+  </nav>
 
 </section>
         
@@ -570,7 +611,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
     </div>
   </div>
 
@@ -580,7 +621,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
+      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 10px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
     </div>
   </div>
 
@@ -602,6 +643,10 @@
       <ul>
         
           <li>
+            <a href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/">基于Canal同步MySQL Binlog到Redis踩到的坑</a>
+          </li>
+        
+          <li>
             <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/">记一次外键和并发引发的MySQL死锁</a>
           </li>
         
@@ -615,10 +660,6 @@
         
           <li>
             <a href="/2019/01/09/基于枚举实现的单例/">基于枚举实现的单例</a>
-          </li>
-        
-          <li>
-            <a href="/2019/01/09/构造者模式/">构造者模式</a>
           </li>
         
       </ul>
