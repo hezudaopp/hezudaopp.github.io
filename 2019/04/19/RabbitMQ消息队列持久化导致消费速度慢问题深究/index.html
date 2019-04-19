@@ -18,8 +18,8 @@
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204807018_623498566.png">
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204842309_1567685049.png">
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419212157133_605753500.png">
-<meta property="og:image" content="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419215155334_1826587720.png">
-<meta property="og:updated_time" content="2019-04-19T15:02:41.228Z">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419215155334_1826587720.png">
+<meta property="og:updated_time" content="2019-04-19T15:04:47.435Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ消息队列持久化导致消费速度慢问题深究">
 <meta name="twitter:description" content="最近限时抢购业务导致消息队列堆积严重，这种情况一般是消息消费速度无法跟上消息生产速度产生的。那么什么会导致消息消费速度降低呢？很明显的一点，就是在消费端处理重业务导致消费端耗时久导致。但是除了这一点，通过指标还观察到一些只处理简单业务逻辑的消息队列消费端也出现了消息堆积的情况。于是顺势再推倒，除了消费端的消费逻辑，还有什么会导致消息消费速度降低呢？查阅了RabbitMQ文档之后，消息队列的持久化这">
@@ -105,7 +105,7 @@
 <p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419212157133_605753500.png" alt="Load指标"></p>
 <p>每天上午的Load指标一直正常，但是到下午后一直飙到高位没有下降，直到近凌晨几乎没有业务产生消息后Load才下降。</p>
 <p>查看aws ec2实例挂载卷的IOPS监控信息，如下图：</p>
-<p><img src="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419215155334_1826587720.png" alt="IOPS"></p>
+<p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419215155334_1826587720.png" alt="IOPS"></p>
 <p>此卷最大每天允许IOPS是300，从图中可以看出，凌晨和上午该卷的IOPS远大于300，到下午和晚上的时候IOPS被限制再100多，于是就会有上图中Load下午和晚上指标飙高的情况。</p>
 <p>由此分析，IOPS速度影响了RabbitMQ的持久化速度，间接影响了队列消费速度。</p>
 <h4 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h4><ol>
@@ -116,7 +116,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo7e4r70000g3p4ifczkpdj" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo7gl1m0004hlp44i8empxr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li></ul>
