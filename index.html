@@ -108,7 +108,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo5k5jl00010kp4wjhxu3b7" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo5yqst00014ip4w9sjj2g0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li></ul>
@@ -189,7 +189,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjuo5k5jr00050kp4nwloa858" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjuo5yqt100094ip4vxy55zzu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -233,7 +233,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cjuo5k5ju00090kp43ok56843" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cjuo5yqt000084ip4xvwfpw6i" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
@@ -269,7 +269,8 @@
       
         <h4 id="线上错误日志"><a href="#线上错误日志" class="headerlink" title="线上错误日志"></a>线上错误日志</h4><p>线上订单状态流转业务偶尔会报数据库MySQL错误<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.dao.CannotAcquireLockException:couldnotexecutestatement;SQL[n/a];nestedexceptionisorg.hibernate.exception.LockAcquisitionException:couldnotexecutestatement</span><br><span class="line">org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java:<span class="number">269</span>)~[spring-orm-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:<span class="number">244</span>)~[spring-orm-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.orm.jpa.JpaTransactionManager.doCommit(JpaTransactionManager.java:<span class="number">521</span>)~[spring-orm-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.transaction.support.AbstractPlatformTransactionManager.processCommit(AbstractPlatformTransactionManager.java:<span class="number">761</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.transaction.support.AbstractPlatformTransactionManager.commit(AbstractPlatformTransactionManager.java:<span class="number">730</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.transaction.interceptor.TransactionAspectSupport.commitTransactionAfterReturning(TransactionAspectSupport.java:<span class="number">504</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:<span class="number">292</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:<span class="number">96</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:<span class="number">136</span>)~[spring-tx-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:<span class="number">133</span>)~[spring-data-jpa-<span class="number">1.11</span>.1.RELEASE.jar!/:na]</span><br><span class="line">org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:<span class="number">92</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.data.repository.core.support.SurroundingTransactionDetectorMethodInterceptor.invoke(SurroundingTransactionDetectorMethodInterceptor.java:<span class="number">57</span>)~[spring-data-commons-<span class="number">1.13</span>.1.RELEASE.jar!/:na]</span><br><span class="line">org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:<span class="number">179</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:<span class="number">213</span>)~[spring-aop-<span class="number">4.3</span>.7.RELEASE.jar!/:<span class="number">4.3</span>.7.RELEASE]</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
 <p>以上日志省略了业务代码那部分的错误，初步排查是由于数据库锁获取失败导致报错。</p>
-<h4 id="数据库业务日志和nginx请求日志分析"><a href="#数据库业务日志和nginx请求日志分析" class="headerlink" title="数据库业务日志和nginx请求日志分析"></a>数据库业务日志和nginx请求日志分析</h4><p>根据错误日志的时间点去反查数据库情况，发现数据库短时间内有三条一样的业务日志产生。根据数据库业务日志再去查询nginx请求日志，发现短时间（ms级）内同一个骑手请求同一个订单流转接口四次（三次成功，一次超时），如下图：<br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190212113347689_1865658982.png?raw=true" alt=""></p>
+<h4 id="数据库业务日志和nginx请求日志分析"><a href="#数据库业务日志和nginx请求日志分析" class="headerlink" title="数据库业务日志和nginx请求日志分析"></a>数据库业务日志和nginx请求日志分析</h4><p>根据错误日志的时间点去反查数据库情况，发现数据库短时间内有三条一样的业务日志产生。根据数据库业务日志再去查询nginx请求日志，发现短时间（ms级）内同一个骑手请求同一个订单流转接口四次（三次成功，一次超时），如下图：</p>
+<p><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419222020773_1477664466.png =759x" alt="logs"></p>
 <h4 id="重现"><a href="#重现" class="headerlink" title="重现"></a>重现</h4><p>既然是并发情况下才会有死锁的问题，我们尝试在测试环境重现。步骤如下：</p>
 <ul>
 <li>将某个订单的状态修改为125</li>
@@ -297,7 +298,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjuo5k5kl001o0kp48ipu7vzp" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjuo5yqtp001n4ip4o4fz7jv9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
@@ -344,7 +345,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjuo5k5jx000c0kp4hmux4qly" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjuo5yqt3000b4ip4iktesjyq" class="article-share-link">Share</a>
       
       
     </footer>
@@ -404,7 +405,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjuo5k5jt00080kp45jjx8xsn" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjuo5yqsy00054ip4zu218c0o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -447,7 +448,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjuo5k5jz000e0kp4addgq2z0" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjuo5yqtb000j4ip41db8b5yk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -490,7 +491,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjuo5k5k5000j0kp4peex50cl" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjuo5yqta000g4ip4stjj12hu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -528,7 +529,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjuo5k5jq00040kp4exm8m8w9" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjuo5yqsx00044ip4bkkuo8tt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -605,7 +606,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjuo5k5k4000g0kp4nsd5308f" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjuo5yqt7000e4ip412zgxlwb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
