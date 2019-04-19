@@ -15,15 +15,15 @@
 <meta property="og:site_name" content="楚湘越水">
 <meta property="og:description" content="最近限时抢购业务导致消息队列堆积严重，这种情况一般是消息消费速度无法跟上消息生产速度产生的。那么什么会导致消息消费速度降低呢？很明显的一点，就是在消费端处理重业务导致消费端耗时久导致。但是除了这一点，通过指标还观察到一些只处理简单业务逻辑的消息队列消费端也出现了消息堆积的情况。于是顺势再推倒，除了消费端的消费逻辑，还有什么会导致消息消费速度降低呢？查阅了RabbitMQ文档之后，消息队列的持久化这">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419204807018_623498566.png?raw=true =598x">
-<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419204842309_1567685049.png?row=true =679x">
-<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419212157133_605753500.png?row=true =499x">
-<meta property="og:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419215155334_1826587720.png?row=true =696x">
-<meta property="og:updated_time" content="2019-04-19T14:13:28.124Z">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204807018_623498566.png =598x">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204842309_1567685049.png =679x">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419212157133_605753500.png?row=true =499x">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419215155334_1826587720.png?row=true =696x">
+<meta property="og:updated_time" content="2019-04-19T14:44:51.137Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ消息队列持久化导致消费速度慢问题深究">
 <meta name="twitter:description" content="最近限时抢购业务导致消息队列堆积严重，这种情况一般是消息消费速度无法跟上消息生产速度产生的。那么什么会导致消息消费速度降低呢？很明显的一点，就是在消费端处理重业务导致消费端耗时久导致。但是除了这一点，通过指标还观察到一些只处理简单业务逻辑的消息队列消费端也出现了消息堆积的情况。于是顺势再推倒，除了消费端的消费逻辑，还有什么会导致消息消费速度降低呢？查阅了RabbitMQ文档之后，消息队列的持久化这">
-<meta name="twitter:image" content="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419204807018_623498566.png?raw=true =598x">
+<meta name="twitter:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204807018_623498566.png =598x">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -94,7 +94,7 @@
       
         <p>最近限时抢购业务导致消息队列堆积严重，这种情况一般是消息消费速度无法跟上消息生产速度产生的。那么什么会导致消息消费速度降低呢？很明显的一点，就是在消费端处理重业务导致消费端耗时久导致。但是除了这一点，通过指标还观察到一些只处理简单业务逻辑的消息队列消费端也出现了消息堆积的情况。于是顺势再推倒，除了消费端的消费逻辑，还有什么会导致消息消费速度降低呢？查阅了RabbitMQ文档之后，消息队列的持久化这个参数引起了我的注意。</p>
 <h4 id="持久化队列VS瞬时队列"><a href="#持久化队列VS瞬时队列" class="headerlink" title="持久化队列VS瞬时队列"></a>持久化队列VS瞬时队列</h4><p>我们知道磁盘的IO速度远低于内存的操作，如果一条消息，到达RabbitMQ server端队列之后需要持久化之后才能被消费，那么消费的速度自然就会受限于消息的持久化速度，消费速度自然提不起来。如何验证消息的持久化对消费速度的影响呢？我们声明两个消息队列：orders和orders_false_durable，这两个队列处理相同的代码，并且让它们同时监听同一个Exchange规则相同的RoutingKey，然后，Publish大量的消息到这个Exchange的RoutingKey，让这些同时被这两个队列接收消费。我们监控这两个队列的消费速度如下：</p>
-<p><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419204807018_623498566.png?raw=true =598x" alt="orders"><br><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419204842309_1567685049.png?row=true =679x" alt="orders_false_durable"></p>
+<p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204807018_623498566.png =598x" alt="orders"><br><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20190419204842309_1567685049.png =679x" alt="orders_false_durable"></p>
 <p>从两个队列消费速度对比我们可以发现</p>
 <ol>
 <li>持久化队列的消息消费速度在消息生产的前期一直处于低位，直到生产快结束之后，消息消费速度才大幅提升；消息堆积成线性上升趋势。</li>
@@ -102,10 +102,10 @@
 </ol>
 <p>既然持久化队列会大幅降低消息消费性能，为何不将队列设置成Transient（瞬时）呢？主要是因为，broker如果重启，入队且未被消费的消息如果未持久化，那么这些消费会随队列一起丢失。（重启期间新产生的消息也会因为队列不存在而丢失？）</p>
 <h4 id="IOPS影响持久化速度"><a href="#IOPS影响持久化速度" class="headerlink" title="IOPS影响持久化速度"></a>IOPS影响持久化速度</h4><p>接下来你可能会问是什么限制了消息的持久化性能？对，RabbitMQ server的IOPS是你第一个想到的点。通过Grafana监控RabbitMQ集群的指标（Grafana没有监控机器的IOPS），我们发现CPU和Memory指标没有任何异常，但是集群机器中的rabbitmq1的Load指标引起了我的注意：</p>
-<p><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419212157133_605753500.png?row=true =499x" alt="Load指标"></p>
+<p><img src="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419212157133_605753500.png?row=true =499x" alt="Load指标"></p>
 <p>每天上午的Load指标一直正常，但是到下午后一直飙到高位没有下降，直到近凌晨几乎没有业务产生消息后Load才下降。</p>
 <p>查看aws ec2实例挂载卷的IOPS监控信息，如下图：</p>
-<p><img src="https://github.com/hezudaopp/hexo/blob/master/source/_posts/_v_images/20190419215155334_1826587720.png?row=true =696x" alt="IOPS"></p>
+<p><img src="https://github.com/hezudaopp/hexo/row/master/source/_posts/_v_images/20190419215155334_1826587720.png?row=true =696x" alt="IOPS"></p>
 <p>此卷最大每天允许IOPS是300，从图中可以看出，凌晨和上午该卷的IOPS远大于300，到下午和晚上的时候IOPS被限制再100多，于是就会有上图中Load下午和晚上指标飙高的情况。</p>
 <p>由此分析，IOPS速度影响了RabbitMQ的持久化速度，间接影响了队列消费速度。</p>
 <h4 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h4><ol>
@@ -116,7 +116,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo5yqst00014ip4w9sjj2g0" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo6zgjr000093p4h2ytbphl" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li></ul>
