@@ -8,14 +8,14 @@
   <title>基于Canal同步MySQL Binlog到Redis踩到的坑 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
-<meta name="keywords" content="MySQL,Binlog,Redis,Canal,RabbitMQ">
+<meta name="keywords" content="RabbitMQ,MySQL,Binlog,Redis,Canal">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于Canal同步MySQL Binlog到Redis踩到的坑">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/index.html">
 <meta property="og:site_name" content="楚湘越水">
 <meta property="og:description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-02-22T16:04:06.538Z">
+<meta property="og:updated_time" content="2019-04-19T12:04:37.741Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于Canal同步MySQL Binlog到Redis踩到的坑">
 <meta name="twitter:description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
@@ -115,19 +115,26 @@
 <li>如何验证该方案的性能及可靠性</li>
 </ul>
 <p>为了验证该方案的可行性，我们从生产导出一天的Binlog日志，然后将这一天的Binlog全部导入压测数据由此产生大量的消息。我们发现，单个消息队列中的消息生产速率大概在1000条/s，而消费速率几乎与生产速率保持相同的水平（实际上消费速率上限应该是大于生产速率，MySQL，Canal，或者RabbitMQ的写性能才要低于Redis的写性能），并且日志导入过程几乎没有发现任何的错误日志。在日志导入结束后，我们抽样验证MySQL和Redis数据的一致性，未发现不一致数据。</p>
-<h4 id="方案踩的坑"><a href="#方案踩的坑" class="headerlink" title="方案踩的坑"></a>方案踩的坑</h4><p>假设如下场景：</p>
-<ol>
+<h4 id="方案踩的坑"><a href="#方案踩的坑" class="headerlink" title="方案踩的坑"></a>方案踩的坑</h4><h5 id="场景一："><a href="#场景一：" class="headerlink" title="场景一："></a>场景一：</h5><ol>
 <li>业务1写入一条新记录到数据库中，然后同步该记录到缓存</li>
 <li>业务2读取缓存数据（此时是业务1写入的缓存）</li>
 <li>业务3更新了数据库中该记录的状态</li>
 <li>业务2根据缓存取到的数据，更新后写入到数据库中（覆盖了业务3更新的状态）</li>
 </ol>
 <p>在该场景下，业务2不应该从缓存中读数据，而应该从数据库读数据，因为业务2要进行写库操作。</p>
+<h5 id="场景二"><a href="#场景二" class="headerlink" title="场景二"></a>场景二</h5><p>若业务代码大量读取历史数据时，因为缓存数据已经过期，从数据库中读取的数据会回写到Redis缓存，导致Redis缓存内存被历史数据占用。正常情况下，我们都会设置Redis最大允许使用内存，并配合数据淘汰机制，保证Redis内存不够时可以写数据成功。目前，线上设置内存淘汰机制为<code>allkeys-lru</code>，当大量历史数据回写缓存时，会将一些重要的缓存数据清理，导致业务逻辑错误。</p>
+<p>针对场景二，有几种解决方案：</p>
+<ul>
+<li>设置<code>maxmemory-policy</code>为<code>volatile-ttl</code>或者<code>volatile-lru</code>，然后根据数据重要程度对不同的缓存设置不同的过期时间。</li>
+<li>对历史数据的读取，直接从数据库读取</li>
+<li>将数据库行对象回写缓存时，考虑该对象的创建时间和过期时间两个，如果两个变量累加和大于当前时间，则不应该回写缓存。</li>
+</ul>
+<p>场景二不仅仅针对我们设计的缓存同步方案，任何缓存回写机制都要考虑该场景。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjsg8y5d00001gpp4e5b9kh83" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjuo5diys0007xyp4ad46izzl" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -138,10 +145,19 @@
     
 <nav id="article-nav">
   
+    <a href="/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          RabbitMQ消息队列持久化导致消费速度慢问题深究
+        
+      </div>
+    </a>
   
-    <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" id="article-nav-older" class="article-nav-link-wrap">
+  
+    <a href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">记一次外键和并发引发的MySQL死锁</div>
+      <div class="article-nav-title">单条大Delete语句导致MySQL主从延迟几个小时问题</div>
     </a>
   
 </nav>
@@ -160,7 +176,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
     </div>
   </div>
 
@@ -170,7 +186,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/MySQL/" style="font-size: 10px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 10px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
+      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/MySQL/" style="font-size: 20px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/主从同步/" style="font-size: 10px;">主从同步</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
     </div>
   </div>
 
@@ -179,7 +195,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li></ul>
     </div>
   </div>
 
@@ -192,7 +208,15 @@
       <ul>
         
           <li>
+            <a href="/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/">RabbitMQ消息队列持久化导致消费速度慢问题深究</a>
+          </li>
+        
+          <li>
             <a href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/">基于Canal同步MySQL Binlog到Redis踩到的坑</a>
+          </li>
+        
+          <li>
+            <a href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/">单条大Delete语句导致MySQL主从延迟几个小时问题</a>
           </li>
         
           <li>
@@ -201,14 +225,6 @@
         
           <li>
             <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
-          </li>
-        
-          <li>
-            <a href="/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/">redis server重启导致redisson client CPU和IO流量飙升问题</a>
-          </li>
-        
-          <li>
-            <a href="/2019/01/09/基于枚举实现的单例/">基于枚举实现的单例</a>
           </li>
         
       </ul>

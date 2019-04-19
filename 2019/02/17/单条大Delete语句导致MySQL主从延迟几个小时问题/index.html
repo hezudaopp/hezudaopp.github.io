@@ -5,20 +5,20 @@
   
 
   
-  <title>构造者模式 | 楚湘越水</title>
+  <title>单条大Delete语句导致MySQL主从延迟几个小时问题 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="两点：  实现具名可选参数功能 可将实例私有域声明为final">
-<meta name="keywords" content="Builder Pattern">
+  <meta name="description" content="某日清晨，线上配送业务无法正常流转，主要反馈配送状态不同步。手机也收到MySQL主从延迟的告警，看样子是主从延迟导致数据不一致。看Graf的Mysql lagging曲线，从凌晨4点到6点多，有两次主从延迟。过去一周没有出现过延迟，但是之前出现过延迟，一般在6点左右lagging就几乎没有延迟，今天却延续到将近8点。MySQL master show full processlist没有大量SQL">
+<meta name="keywords" content="MySQL,主从同步">
 <meta property="og:type" content="article">
-<meta property="og:title" content="构造者模式">
-<meta property="og:url" content="http://hezudaopp.github.io/2019/01/09/构造者模式/index.html">
+<meta property="og:title" content="单条大Delete语句导致MySQL主从延迟几个小时问题">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/index.html">
 <meta property="og:site_name" content="楚湘越水">
-<meta property="og:description" content="两点：  实现具名可选参数功能 可将实例私有域声明为final">
+<meta property="og:description" content="某日清晨，线上配送业务无法正常流转，主要反馈配送状态不同步。手机也收到MySQL主从延迟的告警，看样子是主从延迟导致数据不一致。看Graf的Mysql lagging曲线，从凌晨4点到6点多，有两次主从延迟。过去一周没有出现过延迟，但是之前出现过延迟，一般在6点左右lagging就几乎没有延迟，今天却延续到将近8点。MySQL master show full processlist没有大量SQL">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-01-09T01:32:30.120Z">
+<meta property="og:updated_time" content="2019-02-22T16:05:42.391Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="构造者模式">
-<meta name="twitter:description" content="两点：  实现具名可选参数功能 可将实例私有域声明为final">
+<meta name="twitter:title" content="单条大Delete语句导致MySQL主从延迟几个小时问题">
+<meta name="twitter:description" content="某日清晨，线上配送业务无法正常流转，主要反馈配送状态不同步。手机也收到MySQL主从延迟的告警，看样子是主从延迟导致数据不一致。看Graf的Mysql lagging曲线，从凌晨4点到6点多，有两次主从延迟。过去一周没有出现过延迟，但是之前出现过延迟，一般在6点左右lagging就几乎没有延迟，今天却延续到将近8点。MySQL master show full processlist没有大量SQL">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -65,10 +65,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-构造者模式" class="article article-type-post" itemscope="" itemprop="blogPost">
+        <section id="main"><article id="post-单条大Delete语句导致MySQL主从延迟几个小时问题" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/01/09/构造者模式/" class="article-date">
-  <time datetime="2019-01-09T01:29:28.000Z" itemprop="datePublished">2019-01-09</time>
+    <a href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" class="article-date">
+  <time datetime="2019-02-17T09:23:20.000Z" itemprop="datePublished">2019-02-17</time>
 </a>
     
   </div>
@@ -79,7 +79,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      构造者模式
+      单条大Delete语句导致MySQL主从延迟几个小时问题
     </h1>
   
 
@@ -87,19 +87,20 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>两点：</p>
-<ul>
-<li>实现具名可选参数功能</li>
-<li>可将实例私有域声明为final</li>
+        <p>某日清晨，线上配送业务无法正常流转，主要反馈配送状态不同步。手机也收到MySQL主从延迟的告警，看样子是主从延迟导致数据不一致。看Graf的Mysql lagging曲线，从凌晨4点到6点多，有两次主从延迟。过去一周没有出现过延迟，但是之前出现过延迟，一般在6点左右lagging就几乎没有延迟，今天却延续到将近8点。MySQL master <code>show full processlist</code>没有大量SQL执行，cpu也ok，语句已经在master执行完成，同步SQL导致延迟，而且应该是单条或者少量SQL，否则master上应该能看到大量正在执行的SQL。此时，只能等待同步完成，如果冒然kill掉同步线程，同步食物会Rollback然后重新运行，只会导致更严重的同步延迟。</p>
+<p>导出MySQL binlog查看，延迟开始的时候，MySQL有条Delete语句，删除了一千多万条数据，正式由于该条Delete语句导致同步延迟。</p>
+<h4 id="优化方案"><a href="#优化方案" class="headerlink" title="优化方案"></a>优化方案</h4><ul>
+<li>多线程执行同步任务<br>MySQL 5.6默认情况下同步任务是单线程执行，如果单条SQL语句阻塞，那么之后的binlog同步只能阻塞等待。<br>5.7之后，MySQL支持多线程执行同步任务，<strong>原理是如果多个事务没有两个冲突的行，那么这些事务可以认为是可以并发同步的，前提是binlog format调成row模式。</strong></li>
+<li>分批次执行Delete<br>既然大SQL执行会导致同步阻塞，那么把这个大SQL拆分成小SQL执行即可。比如以上Delete语句，就可以在SQL后面加上limit限制，或者按时间访问进行删除。</li>
 </ul>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjuo5diz4000fxyp45q26eugr" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cjuo5diyt0008xyp4tp97lo17" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
 
     </footer>
   </div>
@@ -107,19 +108,19 @@
     
 <nav id="article-nav">
   
-    <a href="/2019/01/09/基于枚举实现的单例/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          基于枚举实现的单例
+          基于Canal同步MySQL Binlog到Redis踩到的坑
         
       </div>
     </a>
   
   
-    <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">APM系统在线程间共享追踪链路数据问题</div>
+      <div class="article-nav-title">记一次外键和并发引发的MySQL死锁</div>
     </a>
   
 </nav>
