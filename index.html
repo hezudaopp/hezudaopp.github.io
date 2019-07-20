@@ -62,6 +62,207 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-微服务实践过程的思考" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/20/微服务实践过程的思考/" class="article-date">
+  <time datetime="2019-07-20T14:35:14.000Z" itemprop="datePublished">2019-07-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="服务下沉"><a href="#服务下沉" class="headerlink" title="服务下沉"></a>服务下沉</h3><h4 id="服务依赖问题"><a href="#服务依赖问题" class="headerlink" title="服务依赖问题"></a>服务依赖问题</h4><ul>
+<li>同层服务若相互调用，就存在服务依赖的问题</li>
+<li>层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好</li>
+<li>方便对业务层面进行垂直划分</li>
+</ul>
+<h3 id="单服务单数据源"><a href="#单服务单数据源" class="headerlink" title="单服务单数据源"></a>单服务单数据源</h3><h4 id="领域模型在数据源方面的体现"><a href="#领域模型在数据源方面的体现" class="headerlink" title="领域模型在数据源方面的体现"></a>领域模型在数据源方面的体现</h4><ul>
+<li>领域模型在下沉服务和数据源层面做了清晰的划分<h4 id="连表操作物理隔离"><a href="#连表操作物理隔离" class="headerlink" title="连表操作物理隔离"></a>连表操作物理隔离</h4></li>
+<li>避免开发人员的非相关业务的连表操作</li>
+</ul>
+<h3 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h3><h4 id="集中式消息分发"><a href="#集中式消息分发" class="headerlink" title="集中式消息分发"></a>集中式消息分发</h4><ul>
+<li>所有服务的消息都经由统一的消息中间件集群分发给不同的消费者，因此对消费中间件集群的吞吐和高可用要求极高<h4 id="分散式消息消费"><a href="#分散式消息消费" class="headerlink" title="分散式消息消费"></a>分散式消息消费</h4></li>
+<li>按服务划分不同的消费者，将消费压力分担给各个服务</li>
+</ul>
+<h3 id="熔断限流降级机制"><a href="#熔断限流降级机制" class="headerlink" title="熔断限流降级机制"></a>熔断限流降级机制</h3><h4 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h4><ul>
+<li>Dubbo原生的线程池就是极好的限流器</li>
+<li>信号量限流更轻量</li>
+<li>加上队列的限流器会更友好<h4 id="熔断"><a href="#熔断" class="headerlink" title="熔断"></a>熔断</h4></li>
+<li>服务提供方应该对服务接口的性能和幂等性有明确的声明（timeout和retries应该在服务提供方声明）</li>
+<li>熔断后尽可能定义好降级操作</li>
+<li>熔断之后的心跳重试会瞬间给服务提供方带来压力<h4 id="降级"><a href="#降级" class="headerlink" title="降级"></a>降级</h4></li>
+<li>业务层面，可配合Hystrix类的组件定义降级操作</li>
+<li>网关层面，一般用来做系统全局的降级操作和流量控制（Kong会是不错的选择）</li>
+</ul>
+<h3 id="网关"><a href="#网关" class="headerlink" title="网关"></a>网关</h3><h4 id="一致性hash算法"><a href="#一致性hash算法" class="headerlink" title="一致性hash算法"></a>一致性hash算法</h4><ul>
+<li>可提高本地缓存命中率</li>
+<li>降低本地缓存内存占用，并且占用内存和服务的集群规模成反比<h4 id="内部调用监控"><a href="#内部调用监控" class="headerlink" title="内部调用监控"></a>内部调用监控</h4></li>
+</ul>
+<h3 id="APM和统一日志系统（ELK）"><a href="#APM和统一日志系统（ELK）" class="headerlink" title="APM和统一日志系统（ELK）"></a>APM和统一日志系统（ELK）</h3><h4 id="APM"><a href="#APM" class="headerlink" title="APM"></a>APM</h4><ul>
+<li>方便问题的排查</li>
+<li>对接口性能监控<h4 id="统一日志系统"><a href="#统一日志系统" class="headerlink" title="统一日志系统"></a>统一日志系统</h4></li>
+<li>日志系统必须统一，即所有的服务都必须使用一套日志系统</li>
+<li>除了业务日志，各个组件（如MySQL慢日志，Redis服务日志，RabbitMQ错误日志等）的监控日志都必须添加到统一日志系统中</li>
+</ul>
+<h3 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h3><h4 id="一致性需求"><a href="#一致性需求" class="headerlink" title="一致性需求"></a>一致性需求</h4><h4 id="幂等性需求"><a href="#幂等性需求" class="headerlink" title="幂等性需求"></a>幂等性需求</h4>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybo5avb000dk3muvry2zpad" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-Arthas入门" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/04/22/Arthas入门/" class="article-date">
+  <time datetime="2019-04-22T14:52:50.000Z" itemprop="datePublished">2019-04-22</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/04/22/Arthas入门/">Arthas入门</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="1-Arthas为何物"><a href="#1-Arthas为何物" class="headerlink" title="1. Arthas为何物"></a>1. Arthas为何物</h3><p>在线排查问题，无需重启；动态跟踪Java代码；实时监控JVM状态。</p>
+<h3 id="2-使用入门"><a href="#2-使用入门" class="headerlink" title="2. 使用入门"></a>2. 使用入门</h3><h4 id="2-1-dashboard"><a href="#2-1-dashboard" class="headerlink" title="2.1. dashboard"></a>2.1. dashboard</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> dashboard</span><br><span class="line">ID     NAME                GROUP        PRIORI STATE %CPU   TIME   INTER DAEMON </span><br><span class="line">224814 Timer-for-arthas-da system       10     RUNNA 77     0:0    false true   </span><br><span class="line">159    Thread-10           main         5      TIMED 4      3:7    false false  </span><br><span class="line">198    DubboResponseTimeou main         5      TIMED 1      1:7    false true   </span><br><span class="line">1351   RxComputationSchedu main         5      TIMED 1      0:12   false true   </span><br><span class="line">1857   RxComputationSchedu main         5      TIMED 1      0:14   false true   </span><br><span class="line">211    AMQP Connection 172 main         5      RUNNA 0      0:4    false false  </span><br><span class="line">36     Abandoned connectio main         5      TIMED 0      0:22   false true   </span><br><span class="line">288    AnonymousIoService- main         5      WAITI 0      0:0    false true   </span><br><span class="line">408    AnonymousIoService- main         5      WAITI 0      0:0    false true   </span><br><span class="line">409    AnonymousIoService- main         5      WAITI 0      0:0    false true   </span><br><span class="line">Memory           used  total max  usage GC                                      </span><br><span class="line">heap             611M  1183M                                1228                </span><br><span class="line">ps_eden_space    282M  312M  651M       gc.ps_scavenge.time 8073                </span><br><span class="line">                 11M   13M   13M        (ms)                                    </span><br><span class="line">ps_old_gen       318M  857M             gc.ps_marksweep.cou 4                   </span><br><span class="line">nonheap          226M  233M  -1         nt                                      </span><br><span class="line">Runtime                                                                         </span><br><span class="line">os.name             Linux                                                       </span><br><span class="line">os.version          4.4.0-141-generic                                           </span><br><span class="line">java.version        1.8.0_181                                                   </span><br><span class="line">java.home           /usr/lib/jvm/java-8                                         </span><br><span class="line">                    -openjdk-amd64/jre</span><br></pre></td></tr></table></figure>
+<ul>
+<li>ID: Java级别的线程ID，注意这个ID不能跟jstack中的nativeID一一对应</li>
+<li>NAME: 线程名</li>
+<li>GROUP: 线程组名</li>
+<li>PRIORITY: 线程优先级, 1~10之间的数字，越大表示优先级越高</li>
+<li>STATE: 线程的状态</li>
+<li>CPU%: 线程消耗的cpu占比，采样100ms，将所有线程在这100ms内的cpu使用量求和，再算出每个线程的cpu使用占比。</li>
+<li>TIME: 线程运行总时间，数据格式为分：秒</li>
+<li>INTERRUPTED: 线程当前的中断位状态</li>
+<li>DAEMON: 是否是daemon线程<h4 id="2-2-thread"><a href="#2-2-thread" class="headerlink" title="2.2. thread"></a>2.2. thread</h4>查看当前线程信息，查看线程的堆栈</li>
+</ul>
+<p>这里的cpu统计的是，一段采样间隔内，当前JVM里各个线程所占用的cpu时间占总cpu时间的百分比。其计算方法为： 首先进行一次采样，获得所有线程的cpu的使用时间(调用的是java.lang.management.ThreadMXBean#getThreadCpuTime这个接口)，然后睡眠一段时间，默认100ms，可以通过-i参数指定，然后再采样一次，最后得出这段时间内各个线程消耗的cpu时间情况，最后算出百分比。<br>注意： 这个统计也会产生一定的开销（JDK这个接口本身开销比较大），因此会看到as的线程占用一定的百分比，为了降低统计自身的开销带来的影响，可以把采样间隔拉长一些，比如5000毫秒。</p>
+<h4 id="2-3-watch"><a href="#2-3-watch" class="headerlink" title="2.3. watch"></a>2.3. watch</h4><p>让你能方便的观察到指定方法的调用情况。能观察到的范围为：返回值、抛出异常、入参，通过编写 OGNL 表达式进行对应变量的查看。</p>
+<ul>
+<li>watch 命令定义了4个观察事件点，即 -b 方法调用前，-e 方法异常后，-s 方法返回后，-f 方法结束后（包括异常返回和正常返回）</li>
+<li>4个观察事件点 -b、-e、-s 默认关闭，-f 默认打开，当指定观察点被打开后，在相应事件点会对观察表达式进行求值并输出</li>
+<li>这里要注意方法入参和方法出参的区别，有可能在中间被修改导致前后不一致，除了 -b 事件点 params 代表方法入参外，其余事件都代表方法出参</li>
+<li>当使用 -b 时，由于观察事件点是在方法调用前，此时返回值或异常均不存在</li>
+</ul>
+<h4 id="2-4-trace"><a href="#2-4-trace" class="headerlink" title="2.4. trace"></a>2.4. trace</h4><p>方法内部调用路径，并输出方法路径上的每个节点上耗时</p>
+<p>trace 命令能主动搜索 class-pattern／method-pattern 对应的方法调用路径，渲染和统计整个调用链路上的所有性能开销和追踪调用链路</p>
+<h4 id="2-5-stack"><a href="#2-5-stack" class="headerlink" title="2.5. stack"></a>2.5. stack</h4><p>输出当前方法被调用的调用路径</p>
+<p>很多时候我们都知道一个方法被执行，但这个方法被执行的路径非常多，或者你根本就不知道这个方法是从那里被执行了，此时你需要的是 stack 命令。</p>
+<h3 id="3-实际案例"><a href="#3-实际案例" class="headerlink" title="3. 实际案例"></a>3. 实际案例</h3><h4 id="3-1-进入Docker内部的Arthas"><a href="#3-1-进入Docker内部的Arthas" class="headerlink" title="3.1. 进入Docker内部的Arthas"></a>3.1. 进入Docker内部的Arthas</h4><ol>
+<li><p>进入Docker</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo su -</span><br><span class="line">docker ps</span><br><span class="line">docker exec -it inapideploy_notification-service_1 bash</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进入Arthas</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar /app/arthas-boot.jar --repo-mirror aliyun --use-http</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h4 id="3-2-方法的参数，返回值和异常"><a href="#3-2-方法的参数，返回值和异常" class="headerlink" title="3.2. 方法的参数，返回值和异常"></a>3.2. 方法的参数，返回值和异常</h4><ol>
+<li><p>参数和返回值</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">watch com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep "&#123;params, returnObj&#125;" -x 2</span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 322 ms.</span><br><span class="line">ts=2019-04-23 16:46:31; [cost=212.880012ms] result=@ArrayList[</span><br><span class="line">    @Object[][isEmpty=false;size=4],</span><br><span class="line">    @LogisticsTasks[LogisticsTasks(id=9fba1974-8165-4b68-abf6-b84ef273ca52, taskNum=000101556008897002, storeId=6660fb8b-9a97-417c-ab47-1ef9c102e64a, placeId=9b9110be-03d8-4f6a-9274-39639148346c, storeDistance=1422.0, logisticsType=10, sourceType=0, sourceId=9fba1974-8165-4b68-abf6-b84ef273ca52, sourceNum=0101556008897002, buyerId=ea356bd0-4da9-4888-9a4b-cd4e9cd2da81, logisticsStatus=110, deliveryTimeType=0, timeDeliveryPromise=1556010702440, isHasReceipt=false, executerId=0c4f156b-d69a-4bf8-88cf-c164b07893e7, executerName=余秀禹, executerPhone=17605009769, taskStatus=10, totalPrice=3948, remark=新版调度系统：手动抢单, userIdCreate=00000000-0000-0000-0000-000000000000, timeCreate=1556008902440, timeUpdate=1556009190781, userIdUpdate=00000000-0000-0000-0000-000000000000, receiverId=12012559-3dc4-432d-93e6-165130e03d78, isPrint=true, processStatus=10, internalTaskNum=H3164135, timeDeliveryPromiseStart=1556010702440, timeDeliveryPromiseEnd=1556010702440, productWeight=8835, isReady=true, sortNum=0)],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>异常</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep "&#123;params, returnObj&#125;" -e -x 2</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h4 id="3-3-代码是否被正确发布"><a href="#3-3-代码是否被正确发布" class="headerlink" title="3.3. 代码是否被正确发布"></a>3.3. 代码是否被正确发布</h4><ul>
+<li><p>判断方法是否存在</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sm com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>反编译代码</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">jad com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep</span><br><span class="line">ClassLoader:                                                                    </span><br><span class="line">+-org.springframework.boot.loader.LaunchedURLClassLoader@21b8d17c               </span><br><span class="line">  +-sun.misc.Launcher$AppClassLoader@677327b6                                   </span><br><span class="line">    +-sun.misc.Launcher$ExtClassLoader@2ad3a1bb                                 </span><br><span class="line"></span><br><span class="line">Location:                                                                       </span><br><span class="line">file:/app/order-service.jar!/BOOT-INF/classes!/                                 </span><br><span class="line"></span><br><span class="line">public LogisticsTasks nextStep(JwtUser jwtUser, String storeId, LogisticsTasks logisticsTask, String stageId) throws ExecutionException, InterruptedException &#123;</span><br><span class="line">    PupuAssert.isTrue((boolean)(logisticsTask.getLogisticsStatus().intValue() == LogisticsStatus.WAIT_CONFIRM.getValue()), (PupuResponsible)OrderErrorCode.NOT_WAIT_CONFIRM_STATUS);</span><br><span class="line">    long timeNow = System.currentTimeMillis();</span><br><span class="line">    LogisticsStatus targetLogisticsStatus = LogisticsStatus.CONFIRM;</span><br><span class="line">    Orders order = this.logisticsTasksService.getOrders(logisticsTask.getSourceId());</span><br><span class="line">    PupuAssert.notNull((Object)order, (PupuResponsible)OrderErrorCode.NOT_FOUND_ORDER);</span><br><span class="line">    PupuAssert.hasText((String)order.getLogisticsTaskId(), (PupuResponsible)OrderErrorCode.EMPTY_LOGISTICS_TASK_ID);</span><br><span class="line">    PupuAssert.isTrue((boolean)(!UUIDUtils.isEmptyUUID((String)order.getLogisticsTaskId())), (PupuResponsible)OrderErrorCode.EMPTY_LOGISTICS_TASK_ID);</span><br><span class="line">    this.logisticsTasksService.getLogisticsTaskState(targetLogisticsStatus).updateOrderAttributes(jwtUser.getId(), jwtUser.getName(), order, timeNow, null, targetLogisticsStatus.getValue());</span><br><span class="line">    AdminUsersDTO adminUsersDTO = this.logisticsTasksService.getAndValidateAdminUsersDTO(jwtUser.getId());</span><br><span class="line">    LogisticsTasks modifiedLogisticsTask = this.logisticsTasksService.updateLogisticsTaskStatus(adminUsersDTO, adminUsersDTO, logisticsTask, order, targetLogisticsStatus, "\u65b0\u7248\u8c03\u5ea6\u7cfb\u7edf\uff1a\u624b\u52a8\u62a2\u5355", timeNow);</span><br><span class="line">    return modifiedLogisticsTask;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="3-4-跟踪代码执行路径以及耗时"><a href="#3-4-跟踪代码执行路径以及耗时" class="headerlink" title="3.4. 跟踪代码执行路径以及耗时"></a>3.4. 跟踪代码执行路径以及耗时</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">trace com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep -n 1</span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 186 ms.</span><br><span class="line">`---ts=2019-04-23 17:09:51;thread_name=http-nio-8080-exec-17;id=5c72;is_daemon=true;priority=5;TCCL=org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader@5d42104a</span><br><span class="line">    `---[13.712399ms] com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState:nextStep()</span><br><span class="line">        +---[0.043594ms] com.pupu.order.domain.LogisticsTasks:getLogisticsStatus()</span><br><span class="line">        +---[0.004181ms] java.lang.Integer:intValue()</span><br><span class="line">        +---[min=0.001294ms,max=0.003618ms,total=0.004912ms,count=2] com.pupu.core.common.enums.LogisticsStatus:getValue()</span><br><span class="line">        +---[min=0.001192ms,max=0.006326ms,total=0.007518ms,count=2] com.pupu.core.utils.PupuAssert:isTrue()</span><br><span class="line">        +---[0.009649ms] java.lang.System:currentTimeMillis()</span><br><span class="line">        +---[0.003327ms] com.pupu.order.domain.LogisticsTasks:getSourceId()</span><br><span class="line">        +---[0.507863ms] com.pupu.order.service.ILogisticsTasksService:getOrders()</span><br><span class="line">        +---[0.003765ms] com.pupu.core.utils.PupuAssert:notNull()</span><br><span class="line">        +---[min=0.001142ms,max=0.00692ms,total=0.008062ms,count=2] com.pupu.order.domain.Orders:getLogisticsTaskId()</span><br><span class="line">        +---[0.006506ms] com.pupu.core.utils.PupuAssert:hasText()</span><br><span class="line">        +---[0.005608ms] com.pupu.core.utils.UUIDUtils:isEmptyUUID()</span><br><span class="line">        +---[0.004321ms] com.pupu.order.service.ILogisticsTasksService:getLogisticsTaskState()</span><br><span class="line">        +---[min=0.001255ms,max=0.005872ms,total=0.007127ms,count=2] com.pupu.core.dto.web.JwtUser:getId()</span><br><span class="line">        +---[0.002526ms] com.pupu.core.dto.web.JwtUser:getName()</span><br><span class="line">        +---[0.001169ms] java.lang.Integer:&lt;init&gt;()</span><br><span class="line">        +---[0.001286ms] java.lang.reflect.Method:invoke()</span><br><span class="line">        +---[0.050409ms] com.pupu.order.state.logistics.ILogisticsTaskState:updateOrderAttributes()</span><br><span class="line">        +---[2.796072ms] com.pupu.order.service.ILogisticsTasksService:getAndValidateAdminUsersDTO()</span><br><span class="line">        `---[9.858717ms] com.pupu.order.service.ILogisticsTasksService:updateLogisticsTaskStatus()</span><br><span class="line"></span><br><span class="line">Command execution times exceed limit: 1, so command will exit. You can set it with -n option.</span><br></pre></td></tr></table></figure>
+<h4 id="3-5-ognl条件表达式"><a href="#3-5-ognl条件表达式" class="headerlink" title="3.5. ognl条件表达式"></a>3.5. ognl条件表达式</h4><ul>
+<li><p>watch特定参数值</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line">watch com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep "&#123;params, returnObj&#125;" "params[1]=='6660fb8b-9a97-417c-ab47-1ef9c102e64a'" -x 3</span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 150 ms.</span><br><span class="line">ts=2019-04-23 17:00:40; [cost=13.303476ms] result=@ArrayList[</span><br><span class="line">    @Object[][</span><br><span class="line">        @JwtUser[</span><br><span class="line">            id=@String[0c4f156b-d69a-4bf8-88cf-c164b07893e7],</span><br><span class="line">            userName=@String[109266],</span><br><span class="line">            name=@String[余秀禹],</span><br><span class="line">            adminGroupId=@String[6bbb23c1-bc6d-41fb-bc9f-febb4dfeba34],</span><br><span class="line">            isNotNovice=null,</span><br><span class="line">        ],</span><br><span class="line">        @String[6660fb8b-9a97-417c-ab47-1ef9c102e64a],</span><br><span class="line">        @LogisticsTasks[</span><br><span class="line">            id=@String[757a07e3-d4c1-4160-9f8b-061198694d9d],</span><br><span class="line">            taskNum=@String[000101556009712984],</span><br><span class="line">            storeId=@String[6660fb8b-9a97-417c-ab47-1ef9c102e64a],</span><br><span class="line">            placeId=@String[6caac681-f336-4d26-aeb8-64c5e22c7162],</span><br><span class="line">            storeDistance=@Double[2239.0],</span><br><span class="line">            logisticsType=@Integer[10],</span><br><span class="line">            sourceType=@Integer[0],</span><br><span class="line">            sourceId=@String[757a07e3-d4c1-4160-9f8b-061198694d9d],</span><br><span class="line">            sourceNum=@String[0101556009712984],</span><br><span class="line">            buyerId=@String[146ef980-0057-4e0e-81bd-a7290793727e],</span><br><span class="line">            logisticsStatus=@Integer[110],</span><br><span class="line">            deliveryTimeType=@Integer[0],</span><br><span class="line">            timeDeliveryPromise=@Long[1556011519437],</span><br><span class="line">            isHasReceipt=@Boolean[false],</span><br><span class="line">            executerId=@String[0c4f156b-d69a-4bf8-88cf-c164b07893e7],</span><br><span class="line">            executerName=@String[余秀禹],</span><br><span class="line">            executerPhone=@String[17605009769],</span><br><span class="line">            taskStatus=@Integer[10],</span><br><span class="line">            totalPrice=@Integer[1942],</span><br><span class="line">            remark=@String[新版调度系统：手动抢单],</span><br><span class="line">            userIdCreate=@String[00000000-0000-0000-0000-000000000000],</span><br><span class="line">            timeCreate=@Long[1556009719437],</span><br><span class="line">            timeUpdate=@Long[1556010040663],</span><br><span class="line">            userIdUpdate=@String[00000000-0000-0000-0000-000000000000],</span><br><span class="line">            receiverId=@String[7bd8be3d-e65b-42c6-bcb1-7174fc4a80e1],</span><br><span class="line">            isPrint=@Boolean[true],</span><br><span class="line">            processStatus=@Integer[10],</span><br><span class="line">            internalTaskNum=@String[G1165567],</span><br><span class="line">            timeDeliveryPromiseStart=@Long[1556011519437],</span><br><span class="line">            timeDeliveryPromiseEnd=@Long[1556011519437],</span><br><span class="line">            productWeight=@Integer[700],</span><br><span class="line">            isReady=@Boolean[true],</span><br><span class="line">            sortNum=@Integer[0],</span><br><span class="line">        ],</span><br><span class="line">        @String[],</span><br><span class="line">    ],</span><br><span class="line">    @LogisticsTasks[</span><br><span class="line">        id=@String[757a07e3-d4c1-4160-9f8b-061198694d9d],</span><br><span class="line">        taskNum=@String[000101556009712984],</span><br><span class="line">        storeId=@String[6660fb8b-9a97-417c-ab47-1ef9c102e64a],</span><br><span class="line">        placeId=@String[6caac681-f336-4d26-aeb8-64c5e22c7162],</span><br><span class="line">        storeDistance=@Double[2239.0],</span><br><span class="line">        logisticsType=@Integer[10],</span><br><span class="line">        sourceType=@Integer[0],</span><br><span class="line">        sourceId=@String[757a07e3-d4c1-4160-9f8b-061198694d9d],</span><br><span class="line">        sourceNum=@String[0101556009712984],</span><br><span class="line">        buyerId=@String[146ef980-0057-4e0e-81bd-a7290793727e],</span><br><span class="line">        logisticsStatus=@Integer[110],</span><br><span class="line">        deliveryTimeType=@Integer[0],</span><br><span class="line">        timeDeliveryPromise=@Long[1556011519437],</span><br><span class="line">        isHasReceipt=@Boolean[false],</span><br><span class="line">        executerId=@String[0c4f156b-d69a-4bf8-88cf-c164b07893e7],</span><br><span class="line">        executerName=@String[余秀禹],</span><br><span class="line">        executerPhone=@String[17605009769],</span><br><span class="line">        taskStatus=@Integer[10],</span><br><span class="line">        totalPrice=@Integer[1942],</span><br><span class="line">        remark=@String[新版调度系统：手动抢单],</span><br><span class="line">        userIdCreate=@String[00000000-0000-0000-0000-000000000000],</span><br><span class="line">        timeCreate=@Long[1556009719437],</span><br><span class="line">        timeUpdate=@Long[1556010040663],</span><br><span class="line">        userIdUpdate=@String[00000000-0000-0000-0000-000000000000],</span><br><span class="line">        receiverId=@String[7bd8be3d-e65b-42c6-bcb1-7174fc4a80e1],</span><br><span class="line">        isPrint=@Boolean[true],</span><br><span class="line">        processStatus=@Integer[10],</span><br><span class="line">        internalTaskNum=@String[G1165567],</span><br><span class="line">        timeDeliveryPromiseStart=@Long[1556011519437],</span><br><span class="line">        timeDeliveryPromiseEnd=@Long[1556011519437],</span><br><span class="line">        productWeight=@Integer[700],</span><br><span class="line">        isReady=@Boolean[true],</span><br><span class="line">        sortNum=@Integer[0],</span><br><span class="line">    ],</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>关注执行慢的函数</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">trace com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState nextStep '#cost &gt; 10'</span><br><span class="line">Press Q or Ctrl+C to abort.</span><br><span class="line">Affect(class-cnt:1 , method-cnt:1) cost in 167 ms.</span><br><span class="line">`---ts=2019-04-23 17:07:49;thread_name=http-nio-8080-exec-31;id=5c91;is_daemon=true;priority=5;TCCL=org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedWebappClassLoader@5d42104a</span><br><span class="line">    `---[13.41925ms] com.pupu.order.state.logistics.WaitConfirmLogisticsTaskState:nextStep()</span><br><span class="line">        +---[0.019738ms] com.pupu.order.domain.LogisticsTasks:getLogisticsStatus()</span><br><span class="line">        +---[0.004759ms] java.lang.Integer:intValue()</span><br><span class="line">        +---[min=0.004369ms,max=0.020002ms,total=0.024371ms,count=2] com.pupu.core.common.enums.LogisticsStatus:getValue()</span><br><span class="line">        +---[min=0.00206ms,max=0.005935ms,total=0.007995ms,count=2] com.pupu.core.utils.PupuAssert:isTrue()</span><br><span class="line">        +---[0.010221ms] java.lang.System:currentTimeMillis()</span><br><span class="line">        +---[0.003777ms] com.pupu.order.domain.LogisticsTasks:getSourceId()</span><br><span class="line">        +---[0.370217ms] com.pupu.order.service.ILogisticsTasksService:getOrders()</span><br><span class="line">        +---[0.005365ms] com.pupu.core.utils.PupuAssert:notNull()</span><br><span class="line">        +---[min=0.001964ms,max=0.008411ms,total=0.010375ms,count=2] com.pupu.order.domain.Orders:getLogisticsTaskId()</span><br><span class="line">        +---[0.008749ms] com.pupu.core.utils.PupuAssert:hasText()</span><br><span class="line">        +---[0.007843ms] com.pupu.core.utils.UUIDUtils:isEmptyUUID()</span><br><span class="line">        +---[0.005402ms] com.pupu.order.service.ILogisticsTasksService:getLogisticsTaskState()</span><br><span class="line">        +---[min=0.002019ms,max=0.007799ms,total=0.009818ms,count=2] com.pupu.core.dto.web.JwtUser:getId()</span><br><span class="line">        +---[0.271536ms] com.pupu.core.dto.web.JwtUser:getName()</span><br><span class="line">        +---[0.054686ms] com.pupu.order.state.logistics.ILogisticsTaskState:updateOrderAttributes()</span><br><span class="line">        +---[3.046402ms] com.pupu.order.service.ILogisticsTasksService:getAndValidateAdminUsersDTO()</span><br><span class="line">        `---[8.517051ms] com.pupu.order.service.ILogisticsTasksService:updateLogisticsTaskStatus()</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="3-6-找出cpu占用高的线程并打印stack-trace信息"><a href="#3-6-找出cpu占用高的线程并打印stack-trace信息" class="headerlink" title="3.6. 找出cpu占用高的线程并打印stack trace信息"></a>3.6. 找出cpu占用高的线程并打印stack trace信息</h4><ul>
+<li><p>thread查看全局线程cpu占用情况</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> thread</span><br><span class="line">Threads Total: 441, NEW: 0, RUNNABLE: 79, BLOCKED: 0, WAITING: 311, TIMED_WAITIN</span><br><span class="line">G: 51, TERMINATED: 0                                                            </span><br><span class="line">ID     NAME                GROUP        PRIORI STATE %CPU   TIME   INTER DAEMON </span><br><span class="line">225802 as-command-execute- system       10     RUNNA 66     0:0    false true   </span><br><span class="line">427    DubboServerHandler- main         5      WAITI 14     0:4    false true   </span><br><span class="line">159    Thread-10           main         5      TIMED 4      3:8    false false  </span><br><span class="line">122    New I/O server work main         5      RUNNA 3      0:35   false true   </span><br><span class="line">100446 main-SendThread(172 main         5      RUNNA 2      0:0    false true   </span><br><span class="line">198    DubboResponseTimeou main         5      TIMED 1      1:7    false true   </span><br><span class="line">40     redisson-netty-1-3  main         5      RUNNA 1      0:2    false false  </span><br><span class="line">211    AMQP Connection 172 main         5      RUNNA 0      0:4    false false  </span><br><span class="line">36     Abandoned connectio main         5      TIMED 0      0:22   false true</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>thread -n 查看排名靠前的线程</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> thread -n 3</span><br><span class="line">"as-command-execute-daemon" Id=226330 cpuUsage=75% RUNNABLE</span><br><span class="line">    at sun.management.ThreadImpl.dumpThreads0(Native Method)</span><br><span class="line">    at sun.management.ThreadImpl.getThreadInfo(ThreadImpl.java:448)</span><br><span class="line">    at com.taobao.arthas.core.command.monitor200.ThreadCommand.processTopBusyThreads(ThreadCommand.java:133)</span><br><span class="line">    at com.taobao.arthas.core.command.monitor200.ThreadCommand.process(ThreadCommand.java:79)</span><br><span class="line">    at com.taobao.arthas.core.shell.command.impl.AnnotatedCommandImpl.process(AnnotatedCommandImpl.java:82)</span><br><span class="line">    at com.taobao.arthas.core.shell.command.impl.AnnotatedCommandImpl.access$100(AnnotatedCommandImpl.java:18)</span><br><span class="line">    at com.taobao.arthas.core.shell.command.impl.AnnotatedCommandImpl$ProcessHandler.handle(AnnotatedCommandImpl.java:111)</span><br><span class="line">    at com.taobao.arthas.core.shell.command.impl.AnnotatedCommandImpl$ProcessHandler.handle(AnnotatedCommandImpl.java:108)</span><br><span class="line">    at com.taobao.arthas.core.shell.system.impl.ProcessImpl$CommandProcessTask.run(ProcessImpl.java:370)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:748)</span><br><span class="line"></span><br><span class="line">    Number of locked synchronizers = 1</span><br><span class="line">    - java.util.concurrent.ThreadPoolExecutor$Worker@4389bd2b</span><br><span class="line"></span><br><span class="line">"Thread-10" Id=159 cpuUsage=5% TIMED_WAITING</span><br><span class="line">    at java.lang.Thread.sleep(Native Method)</span><br><span class="line">    at com.umpay.bank.Sender.run(Sender.java:49)</span><br><span class="line"></span><br><span class="line">"DubboClientReconnectTimer-thread-2" Id=101 cpuUsage=2% TIMED_WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@369165d5</span><br><span class="line">    at sun.misc.Unsafe.park(Native Method)</span><br><span class="line">    -  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@369165d5</span><br><span class="line">    at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><br><span class="line">    at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1093)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:809)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:748)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>thread {threadId} 查看线程栈信息</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span> thread 101</span><br><span class="line">"DubboClientReconnectTimer-thread-2" Id=101 TIMED_WAITING on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@369165d5</span><br><span class="line">    at sun.misc.Unsafe.park(Native Method)</span><br><span class="line">    -  waiting on java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@369165d5</span><br><span class="line">    at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:215)</span><br><span class="line">    at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2078)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1093)</span><br><span class="line">    at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:809)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)</span><br><span class="line">    at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:748)</span><br><span class="line"></span><br><span class="line">Affect(row-cnt:0) cost in 80 ms.</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="3-7-方法重载如何处理"><a href="#3-7-方法重载如何处理" class="headerlink" title="3.7. 方法重载如何处理"></a>3.7. 方法重载如何处理</h4><ul>
+<li><p>找出所有的重载方法</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sm com.pupu.order.repository.CommentRepository listKnightComment</span><br><span class="line">com.sun.proxy.$Proxy200 listKnightComment(JJ)Ljava/util/List;</span><br><span class="line">com.sun.proxy.$Proxy200 listKnightComment(Ljava/lang/String;JJ)Ljava/util/List;</span><br><span class="line">com.pupu.order.repository.CommentRepository listKnightComment(JJ)Ljava/util/List;</span><br><span class="line">com.pupu.order.repository.CommentRepository listKnightComment(Ljava/lang/String;JJ)Ljava/util/List;</span><br><span class="line">Affect(row-cnt:4) cost in 21 ms.</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ognl表达式过滤</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch com.pupu.order.repository.CommentRepository listKnightComment "&#123;params, returnObj&#125;" "params.length &gt; 3" -x 2</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="3-8-Arthas端口冲突和日志查看"><a href="#3-8-Arthas端口冲突和日志查看" class="headerlink" title="3.8. Arthas端口冲突和日志查看"></a>3.8. Arthas端口冲突和日志查看</h4><p>有的时候watch或者sm等命令提示未找到类，可能是端口冲突引起的</p>
+<ol>
+<li><p>查看Arthas日志</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">tail -100 /root/logs/arthas/</span><br><span class="line">01 2019-04-23 16:40:47.893 ERROR [arthas-binding-thread:arthas] [] [] [] Error listening to port 8563</span><br><span class="line">java.net.BindException: Address already in use</span><br><span class="line">	at sun.nio.ch.Net.bind0(Native Method) ~[na:1.8.0_181]</span><br><span class="line">	at sun.nio.ch.Net.bind(Net.java:433) ~[na:1.8.0_181]</span><br><span class="line">	at sun.nio.ch.Net.bind(Net.java:425) ~[na:1.8.0_181]</span><br><span class="line">	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223) ~[na:1.8.0_181]</span><br><span class="line">	at io.netty.channel.socket.nio.NioServerSocketChannel.doBind(NioServerSocketChannel.java:130) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannel$AbstractUnsafe.bind(AbstractChannel.java:558) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.DefaultChannelPipeline$HeadContext.bind(DefaultChannelPipeline.java:1358) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannelHandlerContext.invokeBind(AbstractChannelHandlerContext.java:501) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannelHandlerContext.bind(AbstractChannelHandlerContext.java:486) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.handler.logging.LoggingHandler.bind(LoggingHandler.java:191) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannelHandlerContext.invokeBind(AbstractChannelHandlerContext.java:501) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannelHandlerContext.bind(AbstractChannelHandlerContext.java:486) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.DefaultChannelPipeline.bind(DefaultChannelPipeline.java:1019) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.AbstractChannel.bind(AbstractChannel.java:254) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.bootstrap.AbstractBootstrap$2.run(AbstractBootstrap.java:366) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:163) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:404) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:446) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:884) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30) ~[arthas-core.jar:3.1.0]</span><br><span class="line">	at java.lang.Thread.run(Thread.java:748) ~[na:1.8.0_181]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>找到被占用端口的进程</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tlunp | egrep "3658|8563"</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>找到Docker进程</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps aux| grep 86308</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>进入Docker</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it inapideploy_order-service_1 bash</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>shutdown Docker内存的Arthas</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -jar /app/arthas-boot.jar 1 -c 'shutdown'</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="cjybo5aw4001rk3muom3vrtyz" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-RabbitMQ消息队列持久化导致消费速度慢问题深究" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" class="article-date">
@@ -108,7 +309,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjuo7gl1m0004hlp44i8empxr" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="cjybo5aw0001nk3mupihfxd6z" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li></ul>
@@ -189,7 +390,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjuo7gl20000ghlp4ah6kueev" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjybo5av30005k3muoutkfm3w" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -233,7 +434,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cjuo7gl1r0008hlp4jv9feqk6" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cjybo5aw5001sk3muht06d35z" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
@@ -298,7 +499,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjuo7gl2k001ohlp4sbtg0126" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cjybo5avr001ek3muh7iel3sk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
@@ -345,7 +546,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjuo7gl1q0007hlp49g5tkjs9" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cjybo5avz001mk3muvmit09k5" class="article-share-link">Share</a>
       
       
     </footer>
@@ -405,7 +606,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjuo7gl1o0005hlp4gc2zjhun" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cjybo5av10004k3muym18y3v9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -448,7 +649,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjuo7gl1v000chlp4tdbkq9gq" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cjybo5av50007k3mu8bmvt9ha" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -491,125 +692,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjuo7gl1w000fhlp4t4nwznm7" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cjybo5ava000bk3mujwjp4c5o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-APM系统在线程间共享追踪链路数据问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="article-date">
-  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">2019-01-07</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cjuo7gl1g0001hlp4gvghivsq" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-最终一致性落地" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/01/06/最终一致性落地/" class="article-date">
-  <time datetime="2019-01-06T12:45:16.000Z" itemprop="datePublished">2019-01-06</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/01/06/最终一致性落地/">最终一致性落地</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h4 id="1-基于重试的最终一致性（不考虑业务逆操作）"><a href="#1-基于重试的最终一致性（不考虑业务逆操作）" class="headerlink" title="1. 基于重试的最终一致性（不考虑业务逆操作）"></a>1. 基于重试的最终一致性（不考虑业务逆操作）</h4><h5 id="1-1-退单业务为例"><a href="#1-1-退单业务为例" class="headerlink" title="1.1. 退单业务为例"></a>1.1. 退单业务为例</h5><ol>
-<li>生成一个全局唯一事务id（TRANSACTION_ID），并写入全局事务log表，状态设置为<code>开始成功</code>（事务协调器执行）</li>
-<li>异步执行订单退单业务，发同步消息队列（send ack）通知事务协调器第二步成功（订单服务执行）</li>
-<li>消费第二步的消息，更新全局事务log表，状态设置为<code>第一阶段成功</code>（事务协调器执行）</li>
-<li>异步执行回库业务（需要保证幂等性），发同步消息队列（send ack）通知事务协调器第四步成功（商品服务执行）</li>
-<li>消费第四步的消息，更新全局事务log表，状态设置为<code>第二阶段成功</code>（事务协调器执行）</li>
-</ol>
-<h5 id="1-2-失败分析"><a href="#1-2-失败分析" class="headerlink" title="1.2. 失败分析"></a>1.2. 失败分析</h5><ol>
-<li>第一步失败，不做操作。</li>
-<li>第二步失败，异常回滚，发同步消息队列（send ack）通知事务协调器第二步失败，事务状态设置为<code>第一阶段失败</code></li>
-<li>第三步失败，也就是说第二步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
-<li>第四步失败，两种方案<ul>
-<li>调用第二步逆操作方法（该方案需要考虑该步失败情况，暂不考虑）</li>
-<li>定时轮询全局事务log表中状态为<code>第一阶段成功</code>的记录，重发消息重试第四步。</li>
-</ul>
-</li>
-<li>第五步失败，也就是说第四步成功，但是事务状态更新失败了，消费者指数递增重试。</li>
-</ol>
-<h5 id="1-3-重试说明"><a href="#1-3-重试说明" class="headerlink" title="1.3. 重试说明"></a>1.3. 重试说明</h5><ul>
-<li>所有重试操作需要记录重试次数，超过一定次数后需人工介入</li>
-<li>所有重试操作都需要保证幂等性。<ul>
-<li>事务状态更新的幂等性：通过乐观锁保证</li>
-<li>业务逻辑的幂等性，如果要统一处理，可以在业务方数据库添加一张额外的日志表，用主键约束保证</li>
-</ul>
-</li>
-</ul>
-<h5 id="1-4-消息队列说明"><a href="#1-4-消息队列说明" class="headerlink" title="1.4. 消息队列说明"></a>1.4. 消息队列说明</h5><ul>
-<li>业务方发送同步消息，需要发送成功确认，确保消息已经投递到消息队列。如果消息失败，则业务方事务回滚。</li>
-<li>重试的消息，不应该影响阻塞正常消息的消费。</li>
-</ul>
-<h5 id="1-5-事务状态流转"><a href="#1-5-事务状态流转" class="headerlink" title="1.5. 事务状态流转"></a>1.5. 事务状态流转</h5><ul>
-<li>表设计：<ul>
-<li>transacion: id, current_span_id, current_node, status, service_type, time_create, time_update</li>
-<li>transaction_span: id, transaction_id, parent_span_id, node, retry_times, status, time_create</li>
-</ul>
-</li>
-<li>流程图<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">st=&gt;start: 事务开始</span><br><span class="line">op_1=&gt;operation: 1：事务初始化</span><br><span class="line">io_1_yes=&gt;inputoutput: 事务初始化成功</span><br><span class="line">op_2=&gt;operation: 2：执行退单业务</span><br><span class="line">io_2_yes=&gt;inputoutput: 退单成功</span><br><span class="line">op_3=&gt;operation: 3：更新事务状态</span><br><span class="line">io_3_yes=&gt;inputoutput: ack退单成功</span><br><span class="line">op_4=&gt;operation: 4：执行回库业务</span><br><span class="line">io_4_yes=&gt;inputoutput: 回库成功</span><br><span class="line">op_5=&gt;operation: 5：更新事务状态</span><br><span class="line">io_5_yes=&gt;inputoutput: ack回库成功</span><br><span class="line">e=&gt;end: 事务结束</span><br><span class="line">cond_1=&gt;condition: 成功？</span><br><span class="line">cond_2=&gt;condition: 成功？</span><br><span class="line">cond_3=&gt;condition: 成功？</span><br><span class="line">cond_4=&gt;condition: 成功？</span><br><span class="line">cond_5=&gt;condition: 成功？</span><br><span class="line">op_2_no=&gt;operation: 回滚</span><br><span class="line">io_2_no=&gt;inputoutput: 执行退单业务失败</span><br><span class="line">op_3_no=&gt;operation: 重试</span><br><span class="line">op_4_no=&gt;operation: 重试</span><br><span class="line">op_5_no=&gt;operation: 重试</span><br><span class="line">st-&gt;op_1-&gt;cond_1(yes)-&gt;io_1_yes-&gt;op_2-&gt;cond_2(yes)-&gt;io_2_yes-&gt;op_3-&gt;cond_3(yes)-&gt;io_3_yes-&gt;op_4-&gt;cond_4(yes)-&gt;io_4_yes-&gt;op_5-&gt;cond_5(yes)-&gt;io_5_yes(right)-&gt;e</span><br><span class="line">cond_1(no)-&gt;e</span><br><span class="line">cond_2(no)-&gt;op_2_no(right)-&gt;e</span><br><span class="line">cond_3(no)-&gt;op_3_no(right)-&gt;op_3</span><br><span class="line">cond_4(no)-&gt;op_4_no(right)-&gt;op_4</span><br><span class="line">cond_5(no)-&gt;op_5_no(right)-&gt;op_5</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cjuo7gl1u000ahlp4zst9astu" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
 
     </footer>
   </div>
@@ -636,7 +722,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
     </div>
   </div>
 
@@ -646,7 +732,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/MySQL/" style="font-size: 20px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/主从同步/" style="font-size: 10px;">主从同步</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
+      <a href="/tags/APM/" style="font-size: 10px;">APM</a> <a href="/tags/Arthas/" style="font-size: 10px;">Arthas</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 20px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/MySQL/" style="font-size: 20px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 10px;">redis</a> <a href="/tags/主从同步/" style="font-size: 10px;">主从同步</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a>
     </div>
   </div>
 
@@ -655,7 +741,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li></ul>
     </div>
   </div>
 
@@ -668,6 +754,14 @@
       <ul>
         
           <li>
+            <a href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/22/Arthas入门/">Arthas入门</a>
+          </li>
+        
+          <li>
             <a href="/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/">RabbitMQ消息队列持久化导致消费速度慢问题深究</a>
           </li>
         
@@ -677,14 +771,6 @@
         
           <li>
             <a href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/">单条大Delete语句导致MySQL主从延迟几个小时问题</a>
-          </li>
-        
-          <li>
-            <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/">记一次外键和并发引发的MySQL死锁</a>
-          </li>
-        
-          <li>
-            <a href="/2019/01/30/一个redisson客户端实现分布式锁的异常/">一个redisson客户端实现分布式锁的异常</a>
           </li>
         
       </ul>

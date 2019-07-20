@@ -5,15 +5,19 @@
   
 
   
-  <title>Archives: 2018 | 楚湘越水</title>
+  <title>微服务实践过程的思考 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/archives/2018/index.html">
+  <meta name="description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务实践过程的思考">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-20T15:09:46.952Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="微服务实践过程的思考">
+<meta name="twitter:description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,59 +64,84 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2018/12/28/Executor-Service内存泄漏/" class="archive-article-date">
-  <time datetime="2018-12-28T12:50:22.000Z" itemprop="datePublished">Dec 28</time>
+        <section id="main"><article id="post-微服务实践过程的思考" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/20/微服务实践过程的思考/" class="article-date">
+  <time datetime="2019-07-20T14:35:14.000Z" itemprop="datePublished">2019-07-20</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/12/28/Executor-Service内存泄漏/">Executor Service内存泄漏</a>
+    <h1 class="article-title" itemprop="name">
+      微服务实践过程的思考
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2018/12/26/Hibernate持久化上下文对象同一性问题/" class="archive-article-date">
-  <time datetime="2018-12-26T12:56:07.000Z" itemprop="datePublished">Dec 26</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2018/12/26/Hibernate持久化上下文对象同一性问题/">Hibernate持久化上下文对象同一性问题</a>
-    </h1>
-  
-
-    </header>
+        <h3 id="服务下沉"><a href="#服务下沉" class="headerlink" title="服务下沉"></a>服务下沉</h3><h4 id="服务依赖问题"><a href="#服务依赖问题" class="headerlink" title="服务依赖问题"></a>服务依赖问题</h4><ul>
+<li>同层服务若相互调用，就存在服务依赖的问题</li>
+<li>层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好</li>
+<li>方便对业务层面进行垂直划分</li>
+</ul>
+<h3 id="单服务单数据源"><a href="#单服务单数据源" class="headerlink" title="单服务单数据源"></a>单服务单数据源</h3><h4 id="领域模型在数据源方面的体现"><a href="#领域模型在数据源方面的体现" class="headerlink" title="领域模型在数据源方面的体现"></a>领域模型在数据源方面的体现</h4><ul>
+<li>领域模型在下沉服务和数据源层面做了清晰的划分<h4 id="连表操作物理隔离"><a href="#连表操作物理隔离" class="headerlink" title="连表操作物理隔离"></a>连表操作物理隔离</h4></li>
+<li>避免开发人员的非相关业务的连表操作</li>
+</ul>
+<h3 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h3><h4 id="集中式消息分发"><a href="#集中式消息分发" class="headerlink" title="集中式消息分发"></a>集中式消息分发</h4><ul>
+<li>所有服务的消息都经由统一的消息中间件集群分发给不同的消费者，因此对消费中间件集群的吞吐和高可用要求极高<h4 id="分散式消息消费"><a href="#分散式消息消费" class="headerlink" title="分散式消息消费"></a>分散式消息消费</h4></li>
+<li>按服务划分不同的消费者，将消费压力分担给各个服务</li>
+</ul>
+<h3 id="熔断限流降级机制"><a href="#熔断限流降级机制" class="headerlink" title="熔断限流降级机制"></a>熔断限流降级机制</h3><h4 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h4><ul>
+<li>Dubbo原生的线程池就是极好的限流器</li>
+<li>信号量限流更轻量</li>
+<li>加上队列的限流器会更友好<h4 id="熔断"><a href="#熔断" class="headerlink" title="熔断"></a>熔断</h4></li>
+<li>服务提供方应该对服务接口的性能和幂等性有明确的声明（timeout和retries应该在服务提供方声明）</li>
+<li>熔断后尽可能定义好降级操作</li>
+<li>熔断之后的心跳重试会瞬间给服务提供方带来压力<h4 id="降级"><a href="#降级" class="headerlink" title="降级"></a>降级</h4></li>
+<li>业务层面，可配合Hystrix类的组件定义降级操作</li>
+<li>网关层面，一般用来做系统全局的降级操作和流量控制（Kong会是不错的选择）</li>
+</ul>
+<h3 id="网关"><a href="#网关" class="headerlink" title="网关"></a>网关</h3><h4 id="一致性hash算法"><a href="#一致性hash算法" class="headerlink" title="一致性hash算法"></a>一致性hash算法</h4><ul>
+<li>可提高本地缓存命中率</li>
+<li>降低本地缓存内存占用，并且占用内存和服务的集群规模成反比<h4 id="内部调用监控"><a href="#内部调用监控" class="headerlink" title="内部调用监控"></a>内部调用监控</h4></li>
+</ul>
+<h3 id="APM和统一日志系统（ELK）"><a href="#APM和统一日志系统（ELK）" class="headerlink" title="APM和统一日志系统（ELK）"></a>APM和统一日志系统（ELK）</h3><h4 id="APM"><a href="#APM" class="headerlink" title="APM"></a>APM</h4><ul>
+<li>方便问题的排查</li>
+<li>对接口性能监控<h4 id="统一日志系统"><a href="#统一日志系统" class="headerlink" title="统一日志系统"></a>统一日志系统</h4></li>
+<li>日志系统必须统一，即所有的服务都必须使用一套日志系统</li>
+<li>除了业务日志，各个组件（如MySQL慢日志，Redis服务日志，RabbitMQ错误日志等）的监控日志都必须添加到统一日志系统中</li>
+</ul>
+<h3 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h3><h4 id="一致性需求"><a href="#一致性需求" class="headerlink" title="一致性需求"></a>一致性需求</h4><h4 id="幂等性需求"><a href="#幂等性需求" class="headerlink" title="幂等性需求"></a>幂等性需求</h4>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybo5avb000dk3muvry2zpad" class="article-share-link">Share</a>
+      
+      
+    </footer>
   </div>
-</article>
+  
+    
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/04/22/Arthas入门/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Arthas入门</div>
+    </a>
   
+</nav>
 
+  
+</article>
 
 </section>
         
