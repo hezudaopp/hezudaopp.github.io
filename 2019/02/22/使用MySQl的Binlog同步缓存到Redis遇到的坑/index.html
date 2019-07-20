@@ -8,7 +8,7 @@
   <title>基于Canal同步MySQL Binlog到Redis踩到的坑 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="方案引入分布式缓存Redis为保证我们系统的流畅提供了可靠的保证，但是随着系统规模的扩大，缓存的大规模使用，缓存的治理势在必行，因此我们引用了Canal中间件。通过Canal伪装成MySQL的Slave来消费MySQL的Binlog日志，然后将这些日志分发到RabbitMQ的不同队列中（同一个交换器，不同队列，队列名以数据库表名区分），最后由RabbitMQ的消费者来更新缓存。除了这套架构，我们还">
-<meta name="keywords" content="MySQL,Binlog,Redis,Canal,RabbitMQ">
+<meta name="keywords" content="RabbitMQ,MySQL,Binlog,Redis,Canal">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于Canal同步MySQL Binlog到Redis踩到的坑">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/index.html">
@@ -134,7 +134,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjybo5av30005k3muoutkfm3w" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="cjybohsch0004ojmu1tw9mv74" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -208,7 +208,7 @@
       <ul>
         
           <li>
-            <a href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+            <a href="/2019/07/20/微服务实践过程的思考/">(no title)</a>
           </li>
         
           <li>

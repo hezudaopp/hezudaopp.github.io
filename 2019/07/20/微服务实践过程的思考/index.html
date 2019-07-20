@@ -5,19 +5,19 @@
   
 
   
-  <title>微服务实践过程的思考 | 楚湘越水</title>
+  <title>楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
+  <meta name="description" content="title: 微服务实践过程的思考date: 2019-07-20 22:35:14tags:– 微服务– 服务下沉– 消息队列– 熔断限流降级– 一致性hash– ELK– APM– CQRS 服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数">
 <meta property="og:type" content="article">
-<meta property="og:title" content="微服务实践过程的思考">
+<meta property="og:title" content="楚湘越水">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/index.html">
 <meta property="og:site_name" content="楚湘越水">
-<meta property="og:description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
+<meta property="og:description" content="title: 微服务实践过程的思考date: 2019-07-20 22:35:14tags:– 微服务– 服务下沉– 消息队列– 熔断限流降级– 一致性hash– ELK– APM– CQRS 服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-07-20T15:09:46.952Z">
+<meta property="og:updated_time" content="2019-07-20T15:19:09.347Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="微服务实践过程的思考">
-<meta name="twitter:description" content="服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分连表操作物理隔离 避免开发人员的非相关业务的连表操作  消息队列集中式消息分发 所有服务的消息都经由统一的消息中间件集群分发给不同的消费者">
+<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:description" content="title: 微服务实践过程的思考date: 2019-07-20 22:35:14tags:– 微服务– 服务下沉– 消息队列– 熔断限流降级– 一致性hash– ELK– APM– CQRS 服务下沉服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源领域模型在数">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -67,26 +67,18 @@
         <section id="main"><article id="post-微服务实践过程的思考" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/07/20/微服务实践过程的思考/" class="article-date">
-  <time datetime="2019-07-20T14:35:14.000Z" itemprop="datePublished">2019-07-20</time>
+  <time datetime="2019-07-20T14:35:14.247Z" itemprop="datePublished">2019-07-20</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      微服务实践过程的思考
-    </h1>
-  
-
-      </header>
-    
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="服务下沉"><a href="#服务下沉" class="headerlink" title="服务下沉"></a>服务下沉</h3><h4 id="服务依赖问题"><a href="#服务依赖问题" class="headerlink" title="服务依赖问题"></a>服务依赖问题</h4><ul>
+        <hr>
+<p>title: 微服务实践过程的思考<br>date: 2019-07-20 22:35:14<br>tags:<br>– 微服务<br>– 服务下沉<br>– 消息队列<br>– 熔断限流降级<br>– 一致性hash<br>– ELK<br>– APM<br>– CQRS</p>
+<h3 id="服务下沉"><a href="#服务下沉" class="headerlink" title="服务下沉"></a>服务下沉</h3><h4 id="服务依赖问题"><a href="#服务依赖问题" class="headerlink" title="服务依赖问题"></a>服务依赖问题</h4><ul>
 <li>同层服务若相互调用，就存在服务依赖的问题</li>
 <li>层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好</li>
 <li>方便对业务层面进行垂直划分</li>
@@ -97,7 +89,10 @@
 </ul>
 <h3 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h3><h4 id="集中式消息分发"><a href="#集中式消息分发" class="headerlink" title="集中式消息分发"></a>集中式消息分发</h4><ul>
 <li>所有服务的消息都经由统一的消息中间件集群分发给不同的消费者，因此对消费中间件集群的吞吐和高可用要求极高<h4 id="分散式消息消费"><a href="#分散式消息消费" class="headerlink" title="分散式消息消费"></a>分散式消息消费</h4></li>
-<li>按服务划分不同的消费者，将消费压力分担给各个服务</li>
+<li>按服务划分不同的消费者，将消费压力分担给各个服务<h4 id="实现CQRS"><a href="#实现CQRS" class="headerlink" title="实现CQRS"></a>实现CQRS</h4></li>
+<li><strong>对于事务提交和消息发送的原子性无法得到保障</strong></li>
+<li>业务解耦</li>
+<li>事件监听机制和数据冗余</li>
 </ul>
 <h3 id="熔断限流降级机制"><a href="#熔断限流降级机制" class="headerlink" title="熔断限流降级机制"></a>熔断限流降级机制</h3><h4 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h4><ul>
 <li>Dubbo原生的线程池就是极好的限流器</li>
@@ -106,7 +101,7 @@
 <li>服务提供方应该对服务接口的性能和幂等性有明确的声明（timeout和retries应该在服务提供方声明）</li>
 <li>熔断后尽可能定义好降级操作</li>
 <li>熔断之后的心跳重试会瞬间给服务提供方带来压力<h4 id="降级"><a href="#降级" class="headerlink" title="降级"></a>降级</h4></li>
-<li>业务层面，可配合Hystrix类的组件定义降级操作</li>
+<li>业务层面，可配合Hystrix这类的组件定义降级操作</li>
 <li>网关层面，一般用来做系统全局的降级操作和流量控制（Kong会是不错的选择）</li>
 </ul>
 <h3 id="网关"><a href="#网关" class="headerlink" title="网关"></a>网关</h3><h4 id="一致性hash算法"><a href="#一致性hash算法" class="headerlink" title="一致性hash算法"></a>一致性hash算法</h4><ul>
@@ -123,7 +118,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybo5avb000dk3muvry2zpad" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybohscn0009ojmulajd1o9m" class="article-share-link">Share</a>
       
       
     </footer>
@@ -186,7 +181,7 @@
       <ul>
         
           <li>
-            <a href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+            <a href="/2019/07/20/微服务实践过程的思考/">(no title)</a>
           </li>
         
           <li>
