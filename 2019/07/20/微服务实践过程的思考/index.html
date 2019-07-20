@@ -7,18 +7,18 @@
   
   <title>微服务实践过程的思考 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="服务下沉 服务依赖问题   同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
+  <meta name="description" content="服务下沉 服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分    单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
 <meta name="keywords" content="APM,微服务,服务下沉,消息队列,熔断限流降级,一致性hash,ELK,CQRS">
 <meta property="og:type" content="article">
 <meta property="og:title" content="微服务实践过程的思考">
 <meta property="og:url" content="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/index.html">
 <meta property="og:site_name" content="楚湘越水">
-<meta property="og:description" content="服务下沉 服务依赖问题   同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
+<meta property="og:description" content="服务下沉 服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分    单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-07-20T15:34:04.689Z">
+<meta property="og:updated_time" content="2019-07-20T15:35:25.771Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="微服务实践过程的思考">
-<meta name="twitter:description" content="服务下沉 服务依赖问题   同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分  单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
+<meta name="twitter:description" content="服务下沉 服务依赖问题 同层服务若相互调用，就存在服务依赖的问题 层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好 方便对业务层面进行垂直划分    单服务单数据源 领域模型在数据源方面的体现 领域模型在下沉服务和数据源层面做了清晰的划分   连表操作物理隔离 避免开发人员的非相关业务的连表操作    消息队列 集中式消息分发 所有服务的消息都经由统一的消息中间件集">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -88,13 +88,13 @@
     <div class="article-entry" itemprop="articleBody">
       
         <h4 id="服务下沉"><a href="#服务下沉" class="headerlink" title="服务下沉"></a>服务下沉</h4><ol>
-<li>服务依赖问题</li>
-</ol>
-<ul>
+<li>服务依赖问题<ul>
 <li>同层服务若相互调用，就存在服务依赖的问题</li>
 <li>层次过多会导致rpc调用过多，代码冗余也会过多，POJO定义繁琐，对开发极不友好</li>
 <li>方便对业务层面进行垂直划分</li>
 </ul>
+</li>
+</ol>
 <h4 id="单服务单数据源"><a href="#单服务单数据源" class="headerlink" title="单服务单数据源"></a>单服务单数据源</h4><ol>
 <li>领域模型在数据源方面的体现<ul>
 <li>领域模型在下沉服务和数据源层面做了清晰的划分</li>
@@ -176,7 +176,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybp0joe000dtwmuyt2nu0ua" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="cjybp22d8000dv9mu53aphnhc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li></ul>
