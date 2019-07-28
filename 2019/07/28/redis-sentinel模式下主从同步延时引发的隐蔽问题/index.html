@@ -5,15 +5,20 @@
   
 
   
-  <title>Tag: Innodb | 楚湘越水</title>
+  <title>redis sentinel模式下主从同步延时引发的隐蔽问题 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/tags/Innodb/index.html">
+  <meta name="description" content="线上低概率出现搜索商品的时候返回空结果，但再一次搜索就可以返回结果。隐约可以感觉到时缓存的问题，因为第一次搜索的时候没有命中缓存，因此会从穿透到es查找数据，然后之后搜索同样的商品就直接从缓存中取数据，因此之后的搜索都会有返回结果。还有一点就是，搜索接口如果返回商品较少时几乎没有出现过返回结果为空的现象。 通过之前的分析去看业务代码，发现业务代码在处理未命中缓存的逻辑时，并没有把从es中取到的数据">
+<meta name="keywords" content="redis,缓存回写,主从同步">
+<meta property="og:type" content="article">
+<meta property="og:title" content="redis sentinel模式下主从同步延时引发的隐蔽问题">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="线上低概率出现搜索商品的时候返回空结果，但再一次搜索就可以返回结果。隐约可以感觉到时缓存的问题，因为第一次搜索的时候没有命中缓存，因此会从穿透到es查找数据，然后之后搜索同样的商品就直接从缓存中取数据，因此之后的搜索都会有返回结果。还有一点就是，搜索接口如果返回商品较少时几乎没有出现过返回结果为空的现象。 通过之前的分析去看业务代码，发现业务代码在处理未命中缓存的逻辑时，并没有把从es中取到的数据">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-07-28T15:20:25.375Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="redis sentinel模式下主从同步延时引发的隐蔽问题">
+<meta name="twitter:description" content="线上低概率出现搜索商品的时候返回空结果，但再一次搜索就可以返回结果。隐约可以感觉到时缓存的问题，因为第一次搜索的时候没有命中缓存，因此会从穿透到es查找数据，然后之后搜索同样的商品就直接从缓存中取数据，因此之后的搜索都会有返回结果。还有一点就是，搜索接口如果返回商品较少时几乎没有出现过返回结果为空的现象。 通过之前的分析去看业务代码，发现业务代码在处理未命中缓存的逻辑时，并没有把从es中取到的数据">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,40 +65,65 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" class="archive-article-date">
-  <time datetime="2019-02-12T03:04:09.000Z" itemprop="datePublished">Feb 12</time>
+        <section id="main"><article id="post-redis-sentinel模式下主从同步延时引发的隐蔽问题" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" class="article-date">
+  <time datetime="2019-07-28T14:37:34.000Z" itemprop="datePublished">2019-07-28</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/02/12/记一次外键和并发引发的MySQL死锁/">记一次外键和并发引发的MySQL死锁</a>
+    <h1 class="article-title" itemprop="name">
+      redis sentinel模式下主从同步延时引发的隐蔽问题
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
-  
-    </div></section>
-  
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>线上低概率出现搜索商品的时候返回空结果，但再一次搜索就可以返回结果。隐约可以感觉到时缓存的问题，因为第一次搜索的时候没有命中缓存，因此会从穿透到es查找数据，然后之后搜索同样的商品就直接从缓存中取数据，因此之后的搜索都会有返回结果。还有一点就是，搜索接口如果返回商品较少时几乎没有出现过返回结果为空的现象。</p>
+<p>通过之前的分析去看业务代码，发现业务代码在处理未命中缓存的逻辑时，并没有把从es中取到的数据返回，而是直接将结果设置到缓存中；如此，就可以统一缓存命中和未命中时的处理代码。</p>
+<p>之前对redis客户端代码进行封装的时候，特别处理exists方法的封装。在sentinel模式或者主从模式下，redisson客户端会将判断key是否exists函数认定为读命令，所有的读命令都会路由到slave节点执行。而主从同步过程中，可能出现master节点key存在，但是slave节点key却不存在的情况。为此，使用了redis的SHA函数，因为redisson客户端只有使用脚本才能指定由master节点执行命令。</p>
+<p>同样，这段处理搜索未命中的代码也有类似的问题。对于搜索接口的逻辑未命中缓存时如下：</p>
+<ol>
+<li>判断key是否在缓存中</li>
+<li>没有在缓存中，从es中取数据</li>
+<li>设置缓存的key值</li>
+<li>从缓存取该key值</li>
+</ol>
+<p>看似没有问题，但是在第3步执行完之后，如果第4步没有等master节点将该key的值同步到slave节点就已经执行，那第4步就取不到该key的值，于是就出现了搜索返回结果为空的问题。找到了问题产生的原因，处理问题也就比较好办，直接将第4步改成将es中获取到的数据直接返回即可。</p>
+<p>使用redis实现分布式锁也存在类似的问题，即当master锁设置完成之后未来得及同步给slave，此时master节点宕机了，锁也就跟着一起丢失。redis作者又实现了RedLock来解决该问题，具体就不详细展开了。</p>
 
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="cjyn426kj00055fp4i71p9jpu" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/07/20/微服务实践过程的思考/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">微服务实践过程的思考</div>
+    </a>
+  
+</nav>
+
+  
+</article>
 
 </section>
         
