@@ -5,15 +5,19 @@
   
 
   
-  <title>Tag: APM | 楚湘越水</title>
+  <title>RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="楚湘越水">
-<meta property="og:url" content="http://hezudaopp.github.io/tags/APM/index.html">
+  <meta name="description" content="系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。 RabbitMQ 通过topic模式收发消息 Exchange一般是领域名称：如ORDER_EXCHANGE RoutingKey一般是业务名，如ORDER.PAID Queue一般用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势">
+<meta property="og:url" content="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/index.html">
 <meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。 RabbitMQ 通过topic模式收发消息 Exchange一般是领域名称：如ORDER_EXCHANGE RoutingKey一般是业务名，如ORDER.PAID Queue一般用">
 <meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-12-14T03:46:46.363Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="楚湘越水">
+<meta name="twitter:title" content="RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势">
+<meta name="twitter:description" content="系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。 RabbitMQ 通过topic模式收发消息 Exchange一般是领域名称：如ORDER_EXCHANGE RoutingKey一般是业务名，如ORDER.PAID Queue一般用">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -60,59 +64,66 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/07/20/微服务实践过程的思考/" class="archive-article-date">
-  <time datetime="2019-07-20T14:35:14.000Z" itemprop="datePublished">Jul 20</time>
+        <section id="main"><article id="post-RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" class="article-date">
+  <time datetime="2019-11-18T07:35:24.000Z" itemprop="datePublished">2019-11-18</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+    <h1 class="article-title" itemprop="name">
+      RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/" class="archive-article-date">
-  <time datetime="2019-01-07T02:02:04.000Z" itemprop="datePublished">Jan 7</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/01/07/APM系统在线程间共享追踪链路数据问题/">APM系统在线程间共享追踪链路数据问题</a>
-    </h1>
-  
+        <p>系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。</p>
+<h4 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h4><ul>
+<li>通过topic模式收发消息</li>
+<li>Exchange一般是领域名称：如ORDER_EXCHANGE</li>
+<li>RoutingKey一般是业务名，如ORDER.PAID</li>
+<li>Queue一般用是消费端业务名，如MARKETING_ACTIVITY_COUNT_INCREASE</li>
+<li><strong>Queue和Exchange,RoutingKey的绑定操作在消费端处理</strong></li>
+<li>Exchange和RoutingKey由<strong>生产端</strong>声明，同学需要对消费端可见</li>
+</ul>
+<h4 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h4><ul>
+<li>topic表示领域，类似RabbitMQ中的Exchange</li>
+<li>消息header中携带事件（kafka消息的key一般用作分区，不适合将事件封装在key中）</li>
+<li>publish方定义事件常量，该常量需定义在对consumer可见的包下</li>
+<li>consumer方根据publish方定义的事件常量过滤消息</li>
+</ul>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck451hk7f0004lzp45y0sm5o2" class="article-share-link">Share</a>
+      
+      
+    </footer>
   </div>
-</article>
+  
+    
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">redis sentinel模式下主从同步延时引发的隐蔽问题</div>
+    </a>
   
+</nav>
 
+  
+</article>
 
 </section>
         
