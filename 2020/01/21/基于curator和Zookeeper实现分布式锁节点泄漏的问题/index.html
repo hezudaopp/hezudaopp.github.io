@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  
+
+  
+  <title>基于Curator和Zookeeper实现分布式锁节点泄漏的问题 | 楚湘越水</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="发现问题运维组巡查发现Zookeeper集群每一台实例CPU偶尔都会飙高，而且随着时间推进，CPU飙高现象也越来越频繁。具体如下图  由于彼时Zookeeper集群耦合了太多的功能，包括Dubbo服务注册，Canal集群协调，配置中心，业务方的协调，分布式锁等等，所以难以判断是什么原因导致CPU飙高。Zookeeper使用JAVA实现，CPU飙高大概率是由于GC导致的；再通过观察CPU飙高持续时间">
+<meta name="keywords" content="Zookeeper,Curator,分布式锁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Curator和Zookeeper实现分布式锁节点泄漏的问题">
+<meta property="og:url" content="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/index.html">
+<meta property="og:site_name" content="楚湘越水">
+<meta property="og:description" content="发现问题运维组巡查发现Zookeeper集群每一台实例CPU偶尔都会飙高，而且随着时间推进，CPU飙高现象也越来越频繁。具体如下图  由于彼时Zookeeper集群耦合了太多的功能，包括Dubbo服务注册，Canal集群协调，配置中心，业务方的协调，分布式锁等等，所以难以判断是什么原因导致CPU飙高。Zookeeper使用JAVA实现，CPU飙高大概率是由于GC导致的；再通过观察CPU飙高持续时间">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165616199_1170516494.png">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121164854006_2103878463.png">
+<meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165011458_1567079786.png">
+<meta property="og:updated_time" content="2020-01-21T10:33:24.084Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于Curator和Zookeeper实现分布式锁节点泄漏的问题">
+<meta name="twitter:description" content="发现问题运维组巡查发现Zookeeper集群每一台实例CPU偶尔都会飙高，而且随着时间推进，CPU飙高现象也越来越频繁。具体如下图  由于彼时Zookeeper集群耦合了太多的功能，包括Dubbo服务注册，Canal集群协调，配置中心，业务方的协调，分布式锁等等，所以难以判断是什么原因导致CPU飙高。Zookeeper使用JAVA实现，CPU飙高大概率是由于GC导致的；再通过观察CPU飙高持续时间">
+<meta name="twitter:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165616199_1170516494.png">
+  
+    <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+</html>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">楚湘越水</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://hezudaopp.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-基于curator和Zookeeper实现分布式锁节点泄漏的问题" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" class="article-date">
+  <time datetime="2020-01-21T08:42:43.000Z" itemprop="datePublished">2020-01-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      基于Curator和Zookeeper实现分布式锁节点泄漏的问题
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h4 id="发现问题"><a href="#发现问题" class="headerlink" title="发现问题"></a>发现问题</h4><p>运维组巡查发现Zookeeper集群每一台实例CPU偶尔都会飙高，而且随着时间推进，CPU飙高现象也越来越频繁。具体如下图</p>
+<p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165616199_1170516494.png" alt="ZookeeperCpuRate"></p>
+<p>由于彼时Zookeeper集群耦合了太多的功能，包括Dubbo服务注册，Canal集群协调，配置中心，业务方的协调，分布式锁等等，所以难以判断是什么原因导致CPU飙高。<br>Zookeeper使用JAVA实现，CPU飙高大概率是由于GC导致的；再通过观察CPU飙高持续时间（如下图），再对比ZookeeperFullGC次数指标，可以断定是FullGC导致的CPU指标飙高。检查下Zookeeper Server集群的启动参数，发现只给JVM堆内存分配512M的内存；因此有理由怀疑是因为随着业务增长带来的Zookeeper节点数量增加导致更频繁的FullGC影响了CPU指标。</p>
+<p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121164854006_2103878463.png" alt="ZookeeperCpu"></p>
+<h4 id="排查问题"><a href="#排查问题" class="headerlink" title="排查问题"></a>排查问题</h4><ul>
+<li>第一阶段<br>加大Zookeeper的JVM堆内存到4G，继续观察指标；发现内存加大后，CPU飙高现象确实没有之前那么频繁。</li>
+<li>第二阶段<br>大概一个月之后，CPU飙高又开始频繁了。加上Prometheus监控后我们发现，Znode缓慢增长，但是已经积累了500多万。<br>通过<code>stat</code>命令，可以拿到Znode的子节点数量信息<code>numChildren</code>，发现是分布式锁相关节点下有大量的子节点，这些子节点都是没有值的。</li>
+</ul>
+<p><img src="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165011458_1567079786.png" alt="ZnodeCount"></p>
+<h4 id="解决问题"><a href="#解决问题" class="headerlink" title="解决问题"></a>解决问题</h4><ul>
+<li>问题为何产生</li>
+</ul>
+<ol>
+<li>Curator的InterProcessMutex实现分布式锁，会在某个固定的节点下重建<code>临时顺序</code>子节点，当锁释放的时候，这个固定的节点并不会释放。</li>
+<li>当我们需要更细粒度的锁时，一般会根据业务来控制锁的粒度。比如扣减库存的场景，我们一般会选用商品id作为锁节点名称的一部分，然后再在这个节点下创建子节点。每次锁释放之后，这个节点都会被留下。随着业务的增长，就会留下很多的没有子节点也没有值的Znode。这些Znode就用占用大量的堆内存空间，影响JVM FullGC的频率以及CPU的使用率。</li>
+</ol>
+<ul>
+<li>如果解决问题</li>
+</ul>
+<ol>
+<li>升级Zookeeper和Curator版本，Zookeeper 3.5以及之后版本支持CONTAINER类型节点，主要特性为：当子节点为空时，能够自动删除父节点（A CONTAINER node is the same as a PERSISTENT node with the additional property that when its last child is deleted, it is deleted (and CONTAINER nodes recursively up the tree are deleted if empty)）。</li>
+<li>自定义简单的分布式互斥锁，拿锁的时候创建<code>临时节点</code>，释放的锁的时候删除该临时节点即可。<h4 id="如何删除大量如此大量的节点"><a href="#如何删除大量如此大量的节点" class="headerlink" title="如何删除大量如此大量的节点"></a>如何删除大量如此大量的节点</h4></li>
+<li>直接执行命令<code>rm</code>删除：Zookeeper直接报错（超时）。</li>
+<li>新建一个集群，复制非分布式锁数据到这个集群下，然后迁移到新集群：需要重启所有的应用服务，而且操作流程繁琐。</li>
+<li>这些节点ID都是UUID作为Znode名称，而这些UUID都是业务相关的ID，因此可以从数据库中取这些UUID然后一批一批删除。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck5nqqqmz000iq6p4qchpm17v" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Curator/">Curator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式锁/">分布式锁</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Curator/">Curator</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ELK/">ELK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/transient/">transient</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件消息/">事件消息</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式锁/">分布式锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/APM/" style="font-size: 15px;">APM</a> <a href="/tags/Arthas/" style="font-size: 10px;">Arthas</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/CQRS/" style="font-size: 10px;">CQRS</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Curator/" style="font-size: 10px;">Curator</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 15px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Kafka/" style="font-size: 10px;">Kafka</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/Zookeeper/" style="font-size: 10px;">Zookeeper</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 15px;">redis</a> <a href="/tags/transient/" style="font-size: 10px;">transient</a> <a href="/tags/一致性hash/" style="font-size: 10px;">一致性hash</a> <a href="/tags/主从同步/" style="font-size: 15px;">主从同步</a> <a href="/tags/事件消息/" style="font-size: 10px;">事件消息</a> <a href="/tags/分布式锁/" style="font-size: 10px;">分布式锁</a> <a href="/tags/微服务/" style="font-size: 10px;">微服务</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a> <a href="/tags/服务下沉/" style="font-size: 10px;">服务下沉</a> <a href="/tags/消息队列/" style="font-size: 10px;">消息队列</a> <a href="/tags/熔断限流降级/" style="font-size: 10px;">熔断限流降级</a> <a href="/tags/缓存回写/" style="font-size: 10px;">缓存回写</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/01/">January 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">November 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/02/">February 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/01/">January 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/12/">December 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/">基于Curator和Zookeeper实现分布式锁节点泄漏的问题</a>
+          </li>
+        
+          <li>
+            <a href="/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/">RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/">redis sentinel模式下主从同步延时引发的隐蔽问题</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/20/微服务实践过程的思考/">微服务实践过程的思考</a>
+          </li>
+        
+          <li>
+            <a href="/2019/04/22/Arthas入门/">Arthas入门</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2020 Jawinton<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
