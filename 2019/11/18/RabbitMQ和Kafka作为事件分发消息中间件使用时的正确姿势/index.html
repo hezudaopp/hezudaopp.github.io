@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="楚湘越水">
 <meta property="og:description" content="系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。 RabbitMQ 通过topic模式收发消息 Exchange一般是领域名称：如ORDER_EXCHANGE RoutingKey一般是业务名，如ORDER.PAID Queue一般用">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2019-12-14T03:47:58.083Z">
+<meta property="og:updated_time" content="2020-02-08T12:39:10.829Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势">
 <meta name="twitter:description" content="系统加入了消息中间件之后，开发人员一般会消息中间件做一些异步操作。但是如何正确使用消息队列进行业务解耦以及事件分发，多数开发人员并没有规范。以下分别罗列RabbitMQ和Kafka用作事件分发消息中间件的一些规范。 RabbitMQ 通过topic模式收发消息 Exchange一般是领域名称：如ORDER_EXCHANGE RoutingKey一般是业务名，如ORDER.PAID Queue一般用">
@@ -97,16 +97,17 @@
 <li>Exchange和RoutingKey由<strong>生产端</strong>声明，同学需要对消费端可见</li>
 </ul>
 <h4 id="Kafka"><a href="#Kafka" class="headerlink" title="Kafka"></a>Kafka</h4><ul>
-<li>topic表示领域，类似RabbitMQ中的Exchange</li>
-<li>消息header中携带事件（kafka消息的key一般用作分区，不适合将事件封装在key中）</li>
-<li>publish方定义事件常量，该常量需定义在对consumer可见的包下</li>
-<li>consumer方根据publish方定义的事件常量过滤消息</li>
+<li>topic表示领域事件，类似RabbitMQ中的RoutingKey，topic名称一般是<code>领域.事件</code></li>
+<li>以业务消费逻辑为单元定义consumerGroup</li>
+<li>publish方往特定的topic下推送消息</li>
+<li>一般以领域中的聚合id的hash值来做topic下patition的依据</li>
+<li>consumerGroup下可以定义小于等于patition数的consumer</li>
 </ul>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck5nqqqmp0004q6p4lchq6tic" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck6dl61pe0001xntn8i99xd2i" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事件消息/">事件消息</a></li></ul>
