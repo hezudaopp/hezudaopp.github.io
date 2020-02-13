@@ -101,7 +101,7 @@
 <li>当我们需要更细粒度的锁时，一般会根据业务来控制锁的粒度。比如扣减库存的场景，我们一般会选用商品id作为锁节点名称的一部分，然后再在这个节点下创建子节点。每次锁释放之后，这个节点都会被留下。随着业务的增长，就会留下很多的没有子节点也没有值的Znode。这些Znode就用占用大量的堆内存空间，影响JVM FullGC的频率以及CPU的使用率。</li>
 </ol>
 <ul>
-<li>如果解决问题</li>
+<li>如何解决问题</li>
 </ul>
 <ol>
 <li>升级Zookeeper和Curator版本，Zookeeper 3.5以及之后版本支持CONTAINER类型节点，主要特性为：当子节点为空时，能够自动删除父节点（A CONTAINER node is the same as a PERSISTENT node with the additional property that when its last child is deleted, it is deleted (and CONTAINER nodes recursively up the tree are deleted if empty)）。</li>
@@ -114,7 +114,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6dl70l9000ayvtnh552465s" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6k7f2pf000flqp4aagdmwhb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Curator/">Curator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式锁/">分布式锁</a></li></ul>
@@ -168,7 +168,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck6dl70l40003yvtniv18xa6z" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck6k7f2p40004lqp4v9s7i1gn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事件消息/">事件消息</a></li></ul>
@@ -218,7 +218,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck6dl70l70007yvtncfxdnrlr" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck6k7f2pa0007lqp4sduux7sj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
@@ -341,7 +341,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck6dl70lh000jyvtnk7fn7cku" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck6k7f2qe001zlqp46xu07013" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li></ul>
@@ -473,7 +473,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck6dl70mf002zyvtnlisk3qkd" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck6k7f2re002zlqp46txyndrd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
@@ -535,7 +535,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck6dl70l60005yvtns6kwja9n" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck6k7f2p80005lqp4qtr2f1vg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/transient/">transient</a></li></ul>
@@ -623,7 +623,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck6dl70lc000fyvtn2faa30y8" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck6k7f2pd000alqp4zjn0xrgf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -667,7 +667,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck6dl70lf000iyvtns151kugu" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck6k7f2pe000clqp4l5davuh0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
@@ -732,7 +732,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="ck6dl70m7002ryvtnuubnlqhm" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="ck6k7f2r4002rlqp4xdj5h9j8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
@@ -779,7 +779,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="ck6dl70l80008yvtnplcdtvls" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="ck6k7f2pi000hlqp4obi1i380" class="article-share-link">Share</a>
       
       
     </footer>

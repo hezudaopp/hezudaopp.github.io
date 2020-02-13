@@ -18,7 +18,7 @@
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165616199_1170516494.png">
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121164854006_2103878463.png">
 <meta property="og:image" content="https://github.com/hezudaopp/hexo/raw/master/source/_posts/_v_images/20200121165011458_1567079786.png">
-<meta property="og:updated_time" content="2020-01-21T10:33:24.084Z">
+<meta property="og:updated_time" content="2020-02-13T03:46:52.770Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于Curator和Zookeeper实现分布式锁节点泄漏的问题">
 <meta name="twitter:description" content="发现问题运维组巡查发现Zookeeper集群每一台实例CPU偶尔都会飙高，而且随着时间推进，CPU飙高现象也越来越频繁。具体如下图  由于彼时Zookeeper集群耦合了太多的功能，包括Dubbo服务注册，Canal集群协调，配置中心，业务方的协调，分布式锁等等，所以难以判断是什么原因导致CPU飙高。Zookeeper使用JAVA实现，CPU飙高大概率是由于GC导致的；再通过观察CPU飙高持续时间">
@@ -108,7 +108,7 @@
 <li>当我们需要更细粒度的锁时，一般会根据业务来控制锁的粒度。比如扣减库存的场景，我们一般会选用商品id作为锁节点名称的一部分，然后再在这个节点下创建子节点。每次锁释放之后，这个节点都会被留下。随着业务的增长，就会留下很多的没有子节点也没有值的Znode。这些Znode就用占用大量的堆内存空间，影响JVM FullGC的频率以及CPU的使用率。</li>
 </ol>
 <ul>
-<li>如果解决问题</li>
+<li>如何解决问题</li>
 </ul>
 <ol>
 <li>升级Zookeeper和Curator版本，Zookeeper 3.5以及之后版本支持CONTAINER类型节点，主要特性为：当子节点为空时，能够自动删除父节点（A CONTAINER node is the same as a PERSISTENT node with the additional property that when its last child is deleted, it is deleted (and CONTAINER nodes recursively up the tree are deleted if empty)）。</li>
@@ -121,7 +121,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6dl70l9000ayvtnh552465s" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6k7f2pf000flqp4aagdmwhb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Curator/">Curator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式锁/">分布式锁</a></li></ul>
