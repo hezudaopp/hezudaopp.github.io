@@ -7,18 +7,18 @@
   
   <title>Dubbo consumer端优雅停机的不足以及改进 | 楚湘越水</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="基于Dubbo 2.6.0版本 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运行的provider服务线程执行完任务返回给consumer方（最大允许等待超时时间通过dubbo.service.shutdown.wait来配置">
+  <meta name="description" content="本文基于Dubbo 2.6.0版本，Dubbo 2.7.x已经修复了本文提到的问题：https://juejin.im/post/5dbe992f6fb9a0202610c745 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运">
 <meta name="keywords" content="Dubbo,优雅停机">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Dubbo consumer端优雅停机的不足以及改进">
 <meta property="og:url" content="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/index.html">
 <meta property="og:site_name" content="楚湘越水">
-<meta property="og:description" content="基于Dubbo 2.6.0版本 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运行的provider服务线程执行完任务返回给consumer方（最大允许等待超时时间通过dubbo.service.shutdown.wait来配置">
+<meta property="og:description" content="本文基于Dubbo 2.6.0版本，Dubbo 2.7.x已经修复了本文提到的问题：https://juejin.im/post/5dbe992f6fb9a0202610c745 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-02-19T02:28:44.842Z">
+<meta property="og:updated_time" content="2020-02-19T10:16:48.882Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Dubbo consumer端优雅停机的不足以及改进">
-<meta name="twitter:description" content="基于Dubbo 2.6.0版本 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运行的provider服务线程执行完任务返回给consumer方（最大允许等待超时时间通过dubbo.service.shutdown.wait来配置">
+<meta name="twitter:description" content="本文基于Dubbo 2.6.0版本，Dubbo 2.7.x已经修复了本文提到的问题：https://juejin.im/post/5dbe992f6fb9a0202610c745 问题抛出provider方的优雅停机Dubbo服务提供方主要通过以下流程实现优雅停机：  先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务 等待已经在运">
   
     <link rel="alternate" href="/atom.xml" title="楚湘越水" type="application/atom+xml">
   
@@ -87,7 +87,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>基于Dubbo 2.6.0版本</p>
+        <p>本文基于Dubbo 2.6.0版本，Dubbo 2.7.x已经修复了本文提到的问题：<a href="https://juejin.im/post/5dbe992f6fb9a0202610c745" target="_blank" rel="noopener">https://juejin.im/post/5dbe992f6fb9a0202610c745</a></p>
 <h2 id="问题抛出"><a href="#问题抛出" class="headerlink" title="问题抛出"></a>问题抛出</h2><h3 id="provider方的优雅停机"><a href="#provider方的优雅停机" class="headerlink" title="provider方的优雅停机"></a>provider方的优雅停机</h3><p>Dubbo服务提供方主要通过以下流程实现优雅停机：</p>
 <ol>
 <li>先注销provider服务在注册中心的注册信息，这样新的consumer流量就无法调用到该机器的provider服务</li>
@@ -127,7 +127,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck6sp6vu5002ri69kwx341cx0" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck6t5wrcz002r679ky9x8ntrx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dubbo/">Dubbo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/优雅停机/">优雅停机</a></li></ul>
