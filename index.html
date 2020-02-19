@@ -94,8 +94,9 @@
 <h3 id="consumer方的优雅停机"><a href="#consumer方的优雅停机" class="headerlink" title="consumer方的优雅停机"></a>consumer方的优雅停机</h3><p>Dubbo官方对于consumer方实现优雅停机的描述是这样的</p>
 <ul>
 <li>停止时，不再发起新的调用请求，所有新的调用在客户端即报错。</li>
-<li>然后，检测有没有请求的响应还没有返回，等待响应返回，除非超时，则强制关闭。<br>关键问题在于第一点，如果保证停止时不再有新的调用请求。<h4 id="web服务"><a href="#web服务" class="headerlink" title="web服务"></a>web服务</h4>对于web类服务，我们通过网关（如nginx，kong等）切换流量来实现停机前不再发起新的Dubbo调用请求。</li>
+<li>然后，检测有没有请求的响应还没有返回，等待响应返回，除非超时，则强制关闭。<br>关键问题在于第一点，如果保证停止时不再有新的调用请求。</li>
 </ul>
+<h4 id="web服务"><a href="#web服务" class="headerlink" title="web服务"></a>web服务</h4><p>对于web类服务，我们通过网关（如nginx，kong等）切换流量来实现停机前不再发起新的Dubbo调用请求。</p>
 <h4 id="消息中间件消费服务"><a href="#消息中间件消费服务" class="headerlink" title="消息中间件消费服务"></a>消息中间件消费服务</h4><p>如果是消息中间件消费服务，如果避免在停止Dubbo容器时，不再有新的Dubbo调用请求以及如何如果保证有的Dubbo调用结束后再关闭容器。</p>
 <h2 id="实现方案"><a href="#实现方案" class="headerlink" title="实现方案"></a>实现方案</h2><p>如上分析，我们可以判断如果服务在停机的时候还有新的请求，那么这些请求会由于Dubbo容器的停止而调用失败。</p>
 <h3 id="验证问题存在"><a href="#验证问题存在" class="headerlink" title="验证问题存在"></a>验证问题存在</h3><p>我们使用RabbitMQ消息中间件做模拟，先往RabbitMQ broker的queue中推送大量的消息等待消费应用来消费，消费的逻辑很简单，调用Dubbo接口，该Dubbo接口会sleep 1s后返回。<br>当停止消费应用Dubbo容器的时候，会报如下的错误信息：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Caused by: com.alibaba.dubbo.rpc.RpcException: Rpc invoker for service interface com.pupu.product.api.sleep -&gt; dubbo://192.168.1.111:28087/com.pupu.product.api.sleep?anyhost=true&amp;application=product-consumer&amp;check=false&amp;dubbo=2.6.0&amp;generic=false&amp;interface=com.pupu.product.api.sleep&amp;loadbalance=consistenthash&amp;methods=sleep&amp;pid=1&amp;register.ip=172.16.16.121&amp;remote.timestamp=1581085333479&amp;revision=0.0.140&amp;side=consumer&amp;timeout=10000&amp;timestamp=1581086035422&amp;version=1.0.0 on consumer 192.168.1.111 use dubbo version 2.6.0 is DESTROYED, can not be invoked any more!</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.AbstractInvoker.invoke(AbstractInvoker.java:<span class="number">122</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.pupu.core.config.dubbo.HystrixFilter.invoke(HystrixFilter.java:<span class="number">22</span>) ~[core-common-<span class="number">0.0</span>.235.jar!/:<span class="number">0.0</span>.235]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper$<span class="number">1</span>.invoke(ProtocolFilterWrapper.java:<span class="number">68</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.monitor.support.MonitorFilter.invoke(MonitorFilter.java:<span class="number">74</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper$<span class="number">1</span>.invoke(ProtocolFilterWrapper.java:<span class="number">68</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.dubbo.filter.FutureFilter.invoke(FutureFilter.java:<span class="number">53</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper$<span class="number">1</span>.invoke(ProtocolFilterWrapper.java:<span class="number">68</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.filter.ConsumerContextFilter.invoke(ConsumerContextFilter.java:<span class="number">47</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.ProtocolFilterWrapper$<span class="number">1</span>.invoke(ProtocolFilterWrapper.java:<span class="number">68</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.listener.ListenerInvokerWrapper.invoke(ListenerInvokerWrapper.java:<span class="number">73</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.protocol.InvokerWrapper.invoke(InvokerWrapper.java:<span class="number">52</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	at com.alibaba.dubbo.rpc.cluster.support.FailoverClusterInvoker.doInvoke(FailoverClusterInvoker.java:<span class="number">77</span>) ~[dubbo-<span class="number">2.6</span>.0.jar!/:<span class="number">2.6</span>.0]</span><br><span class="line">	... <span class="number">8</span> common frames omitted</span><br></pre></td></tr></table></figure></p>
@@ -111,7 +112,7 @@
 </li>
 </ol>
 <p>理解了Dubbo停服务的实现之后，通过分析不难发现，只要在Dubbo容器执行shutdown之前，停止消息中间件中新的消息进入到容器中，并且让已经进入到容器中的消息执行完成后再执行Dubbo容器的shutdown操作即可做到消费服务的优雅停机。</p>
-<p>我们再来看看Runtime中执行shutdownhook线程的实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ApplicationShutdownHooks</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> IdentityHashMap&lt;Thread, Thread&gt; hooks;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">runHooks</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Collection&lt;Thread&gt; threads;</span><br><span class="line">        <span class="keyword">synchronized</span>(ApplicationShutdownHooks.class) &#123;</span><br><span class="line">            threads = hooks.keySet();</span><br><span class="line">            hooks = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 并发执行各个hook</span></span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            hook.start();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 等待各个hook执行完成</span></span><br><span class="line">                    hook.join();</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>我们再来看看Runtime中执行shutdownhook线程的实现：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ApplicationShutdownHooks</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> IdentityHashMap&lt;Thread, Thread&gt; hooks;</span><br><span class="line">    ...</span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">runHooks</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Collection&lt;Thread&gt; threads;</span><br><span class="line">        <span class="keyword">synchronized</span>(ApplicationShutdownHooks.class) &#123;</span><br><span class="line">            threads = hooks.keySet();</span><br><span class="line">            hooks = <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 并发执行各个hook</span></span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            hook.start();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (Thread hook : threads) &#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// 等待各个hook执行完成</span></span><br><span class="line">                    hook.join();</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException ignored) &#123;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
 <p>从代码中可以看出，所有的shutdownhook线程是并发执行的，也就是说Dubbo容器的shutdownhook会和RabbitMQ consumer的shutdownhook线程并发执行。<br>这样就会出现RabbitMQ consumer的shutdownhook线程还没有执行完成的情况下，Dubbo容器的shutdownhook已经执行执行完毕了。<br>在Dubbo shutdownhook执行完成之后到RabbitMQ consumer的shutdownhook线程执行完成之后这期间的消息执行的任务都会异常。<br>因此，只要让RabbitMQ consumer不再接收新消息并且所有已经接收的消息已经执行完成之后再执行Dubbo shutdownhook线程，即可避免这个异常。</p>
 <h3 id="避免shutdownhook的线程并发执行"><a href="#避免shutdownhook的线程并发执行" class="headerlink" title="避免shutdownhook的线程并发执行"></a>避免shutdownhook的线程并发执行</h3><ol>
 <li>注销Dubbo shutdownhook</li>
@@ -123,7 +124,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck6sozcca002rd59kpa9kymwj" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck6sp6vu5002ri69kwx341cx0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dubbo/">Dubbo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/优雅停机/">优雅停机</a></li></ul>
@@ -187,7 +188,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6sozcbl000fd59kauldcvjd" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck6sp6vtg000fi69k9ynz5elv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Curator/">Curator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式锁/">分布式锁</a></li></ul>
@@ -241,7 +242,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck6sozcbb0004d59ksbgo3c3o" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck6sp6vt70004i69kqvhw5ytc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事件消息/">事件消息</a></li></ul>
@@ -291,7 +292,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck6sozcbd0007d59kateh0mri" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck6sp6vt90007i69kctng8o38" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
@@ -414,7 +415,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck6sozcbn000kd59k260xk3ro" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck6sp6vtj000ki69korz4uuhr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li></ul>
@@ -546,7 +547,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck6sozccy0034d59k3k4r1q69" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck6sp6vuj0034i69kt1dmyxki" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
@@ -608,7 +609,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck6sozcbb0005d59kcpsi0dh4" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck6sp6vt80005i69knrho2w9o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/transient/">transient</a></li></ul>
@@ -696,7 +697,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck6sozcbg000bd59kosvg3uce" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck6sp6vtc000bi69km1k3vmgf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -740,7 +741,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck6sozcbh000dd59k83fbg9m2" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck6sp6vte000di69kp3bvoh8h" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
@@ -805,7 +806,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="ck6sozccb002sd59k4nqwebsa" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="ck6sp6vu6002si69k7uk215i6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
