@@ -84,16 +84,16 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>Redis是当下流行的分布式缓存系统，其丰富灵活的数据机构和高效的性能深受开发者喜爱。有些应用场景，我们可能大量的缓存数据，比如所有用户购物商品的缓存。这样的缓存需要占用大量内存，如果使用Redis来实现，要不使用Codis这样的代理层来将数据存储到不同的Redis集群，要不就直接使用Redis集群模式来手动管理Key分片。但是Redis集群配置麻烦，而Codis的引入会有性能的损失（Codis作为第三方集群实现方案，很多Redis新特性短时间内无法支持也是个问题）。而如果想在应用服务本地使用缓存来存储用户行为等这样的大量的数据，会经常发生缓存被驱逐的情况，缓存的命中率和性能效果都不会很理想。有什么方案可以将大批量的数据缓存在应用本地的同时能提高本地缓存的命令率，并且可以做到缓存空间弹性水平（非垂直）伸缩？答案就是使用<strong>一致性hash路由</strong>算法。比如上述用户购物车商品的缓存的场景，都是通过用户维度查询商品列表，我们就可以根据用户id计算hash值之后路由后向服务提供方发起请求。</p>
-<h4 id="缓存命令率的提高"><a href="#缓存命令率的提高" class="headerlink" title="缓存命令率的提高"></a>缓存命令率的提高</h4><p>同一个用户的请求会请求道相同的机器，同一个用户多次请求同一个接口的情况下，命中率自然比通过随机或者轮询的方式命中率高。并且，如果同一个用户多次通过随机或者轮询的路由方式请求同一个接口，如果请求的机器未命中缓存，该机器就需要重建最近一次请求返回数据的缓存，这就会占用该机器的缓存空间。这样，该机器就更容易触发缓存回收操作，影响其他请求的缓存命令率。</p>
-<h4 id="缓存空间的水平拓展"><a href="#缓存空间的水平拓展" class="headerlink" title="缓存空间的水平拓展"></a>缓存空间的水平拓展</h4><p>随着单位时间内用户请求量的提升，应用就需要更大的缓存空间以满足性能需求。使用一致性hash路由的方式，我们可以很方便的通过增加应用服务机器的方式水平扩展应用服务缓存空间，让部分新用户和部分旧用户的请求落到新增的机器上。这一点，依赖于一致性hash算法的虚拟节点实现的负载均衡算法来满足。</p>
-<h4 id="缓存的准实时更新"><a href="#缓存的准实时更新" class="headerlink" title="缓存的准实时更新"></a>缓存的准实时更新</h4><p>一般情况下，数据库数据的变更，我们一般不主动通知应用服务去更新缓存，而是通过应用服务的缓存过期机制（被动）来保持缓存和数据库数据的同步。通过过期机制同步数据的主要缺点在于，数据库数据的变更和缓存过期存在一定的时间窗口。这个时间窗口内，用户请求接口得到的数据是不准确的。如果想在这个时间窗口内同步数据库的数据变更到本地缓存，需要使用广播的方式通知到所有的应用服务（这对网络带宽、性能和代码实现都是很不友好的）。而通过一致性hash路由算法，我们只需要通知到一台应用服务即可，如此，我们只需在数据库变更之后（MySQL的话推荐使用binlog监听方式来感知数据变更），使用一致性hash路由调用应用服务的缓存更新接口即可。</p>
+        <p>Redis是当下流行的分布式缓存系统，其丰富灵活的数据机构和高效的性能深受开发者喜爱。有些应用场景，我们可能需要存储大量的缓存数据，比如所有用户购物商品的缓存。如果使用Redis来实现，要不使用Codis这样的代理层来将数据存储到不同的Redis集群，要不就直接使用Redis集群模式来手动管理集群分片。但是Redis集群配置麻烦，而Codis的引入会有性能的损失（Codis作为第三方集群实现方案，很多Redis新特性短时间内无法支持也是个问题）。而如果想在应用服务本地使用缓存来存储这样大量的数据，会经常发生缓存被驱逐的情况，导致缓存的命中率和性能都不会很理想。有什么方案可以将大批量的数据缓存在应用本地，同时又能提高本地缓存的命令率，并且可以做到缓存空间弹性水平（非垂直）伸缩？答案就是使用<strong>一致性hash路由</strong>算法。比如上述用户购物车商品缓存的场景，都是通过用户维度查询商品列表，我们就可以根据用户id计算hash值之后依据该值向服务提供方发起请求。</p>
+<h4 id="缓存命令率的提高"><a href="#缓存命令率的提高" class="headerlink" title="缓存命令率的提高"></a>缓存命令率的提高</h4><p>一致性hash路由会将同一个用户的请求会路由到相同的机器，如果同一个用户多次请求同一个接口，命中率自然比通过随机或者轮询方式路由来的高。并且，使用随机或者轮询方式路由，如果请求的应用服务机器未命中缓存，该机器就需要重建最近一次请求的缓存，这样，该机器就更容易触发缓存回收操作，影响其他请求的缓存命令率。</p>
+<h4 id="缓存空间的水平拓展"><a href="#缓存空间的水平拓展" class="headerlink" title="缓存空间的水平拓展"></a>缓存空间的水平拓展</h4><p>随着单位时间内用户请求量的提升，应用就需要更大的缓存空间以满足性能和缓存存储的需求。使用一致性hash路由的方式，我们可以很方便的通过增加应用服务机器的方式水平扩展缓存空间，让部分新用户和部分旧用户的请求落到新增的机器上（一致性hash通过引入虚拟节点来实现负载均衡）。</p>
+<h4 id="缓存的准实时更新"><a href="#缓存的准实时更新" class="headerlink" title="缓存的准实时更新"></a>缓存的准实时更新</h4><p>一般情况下，数据库数据的变更，应用服务不会主动去更新缓存，而是通过应用服务的缓存过期机制（被动）来保持缓存和数据库数据的同步。通过过期机制同步缓存和主数据库数据的缺点在于，数据库数据的变更和缓存过期存在一定的时间窗口。这个时间窗口内，用户请求接口得到的是过期的数据。如果想在这个时间窗口内同步主数据库的数据到本地缓存，需要使用广播的方式通知到所有的应用服务（这对网络带宽、性能、数据实时性以及代码实现都是很不友好的）。而通过一致性hash路由算法，我们只需要同步数据到其中一台应用服务器，如此，我们只需在数据库数据变更之后（MySQL的话推荐使用binlog监听方式来感知数据变更），使用一致性hash路由调用应用服务更新缓存的接口即可。</p>
 <p>完</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/04/26/一致性hash和分布式缓存的一些思考/" data-id="ck9h89pdv000a3dc9gkr26goq" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/04/26/一致性hash和分布式缓存的一些思考/" data-id="ck9h8w0au000b7bc967ci0kl7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式缓存/">分布式缓存</a></li></ul>
@@ -167,7 +167,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck9h89pem002w3dc93frpbwnu" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/02/18/Dubbo-consumer端优雅停机的不足以及改进/" data-id="ck9h8w0bl002w7bc9b3fen3f7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dubbo/">Dubbo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/优雅停机/">优雅停机</a></li></ul>
@@ -231,7 +231,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck9h89pdz000f3dc914oqclby" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2020/01/21/基于curator和Zookeeper实现分布式锁节点泄漏的问题/" data-id="ck9h8w0ay000i7bc9qd4bkcrh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Curator/">Curator</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/分布式锁/">分布式锁</a></li></ul>
@@ -285,7 +285,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck9h89pdr00053dc9yzzskb4w" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/" data-id="ck9h8w0ao00047bc9y2z4dkgz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事件消息/">事件消息</a></li></ul>
@@ -335,7 +335,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck9h89pds00073dc9fdo78i6a" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/" data-id="ck9h8w0ar00077bc99bvh5cvb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
@@ -458,7 +458,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck9h89pe1000k3dc9c83p7y7r" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/07/20/微服务实践过程的思考/" data-id="ck9h8w0b0000l7bc9zqoq34i0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ELK/">ELK</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/微服务/">微服务</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li></ul>
@@ -590,7 +590,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck9h89pf200393dc90kuj5ald" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/22/Arthas入门/" data-id="ck9h8w0c100397bc9x3g9hwzn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/">JVM</a></li></ul>
@@ -652,7 +652,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck9h89pdq00043dc9f4lf6tnx" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/04/19/RabbitMQ消息队列持久化导致消费速度慢问题深究/" data-id="ck9h8w0ap00057bc9rigv26d6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/durable/">durable</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/transient/">transient</a></li></ul>
@@ -740,7 +740,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck9h89pdv000b3dc9ezv1efs9" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/22/使用MySQl的Binlog同步缓存到Redis遇到的坑/" data-id="ck9h8w0aw000d7bc9o547cpwf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canal/">Canal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/">Redis</a></li></ul>
@@ -784,7 +784,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck9h89pdx000d3dc9jq38ijfg" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="ck9h8w0ax000f7bc95zhk1l2z" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
