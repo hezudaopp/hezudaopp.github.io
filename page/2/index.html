@@ -62,6 +62,50 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-单条大Delete语句导致MySQL主从延迟几个小时问题" class="article article-type-post" itemscope="" itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" class="article-date">
+  <time datetime="2019-02-17T09:23:20.000Z" itemprop="datePublished">2019-02-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/">单条大Delete语句导致MySQL主从延迟几个小时问题</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>某日清晨，线上配送业务无法正常流转，主要反馈配送状态不同步。手机也收到MySQL主从延迟的告警，看样子是主从延迟导致数据不一致。看Graf的Mysql lagging曲线，从凌晨4点到6点多，有两次主从延迟。过去一周没有出现过延迟，但是之前出现过延迟，一般在6点左右lagging就几乎没有延迟，今天却延续到将近8点。MySQL master <code>show full processlist</code>没有大量SQL执行，cpu也ok，语句已经在master执行完成，同步SQL导致延迟，而且应该是单条或者少量SQL，否则master上应该能看到大量正在执行的SQL。此时，只能等待同步完成，如果冒然kill掉同步线程，同步食物会Rollback然后重新运行，只会导致更严重的同步延迟。</p>
+<p>导出MySQL binlog查看，延迟开始的时候，MySQL有条Delete语句，删除了一千多万条数据，正式由于该条Delete语句导致同步延迟。</p>
+<h4 id="优化方案"><a href="#优化方案" class="headerlink" title="优化方案"></a>优化方案</h4><ul>
+<li>多线程执行同步任务<br>MySQL 5.6默认情况下同步任务是单线程执行，如果单条SQL语句阻塞，那么之后的binlog同步只能阻塞等待。<br>5.7之后，MySQL支持多线程执行同步任务，<strong>原理是如果多个事务没有两个冲突的行，那么这些事务可以认为是可以并发同步的，前提是binlog format调成row模式。</strong></li>
+<li>分批次执行Delete<br>既然大SQL执行会导致同步阻塞，那么把这个大SQL拆分成小SQL执行即可。比如以上Delete语句，就可以在SQL后面加上limit限制，或者按时间访问进行删除。</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://hezudaopp.github.io/2019/02/17/单条大Delete语句导致MySQL主从延迟几个小时问题/" data-id="cka7nybk4000ie2cbfmxr3jz3" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/主从同步/">主从同步</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-记一次外键和并发引发的MySQL死锁" class="article article-type-post" itemscope="" itemprop="blogPost">
   <div class="article-meta">
     <a href="/2019/02/12/记一次外键和并发引发的MySQL死锁/" class="article-date">
@@ -115,7 +159,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="ck9h8w0bm002x7bc9hvwdh33n" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/02/12/记一次外键和并发引发的MySQL死锁/" data-id="cka7nybku0034e2cba2ls0dvq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JPA/">JPA</a></li></ul>
@@ -162,7 +206,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="ck9h8w0at000a7bc97lzoj85a" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/30/一个redisson客户端实现分布式锁的异常/" data-id="cka7nybjx0008e2cbph76ezsm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -222,7 +266,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="ck9h8w0as00087bc9jlcv8jp1" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/16/redis-server重启导致redisson-client-CPU和IO流量飙升问题/" data-id="cka7nybjy000ae2cbicjn7jln" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/netty/">netty</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/redis/">redis</a></li></ul>
@@ -265,7 +309,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="ck9h8w0az000k7bc9h0qamuhq" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/基于枚举实现的单例/" data-id="cka7nybk6000le2cb10bts0a1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li></ul>
@@ -308,7 +352,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="ck9h8w0b2000s7bc9qeohm1k6" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/09/构造者模式/" data-id="cka7nybka000ue2cbcy52q6v3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li></ul>
@@ -346,7 +390,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="ck9h8w0af00007bc97brdqfja" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/07/APM系统在线程间共享追踪链路数据问题/" data-id="cka7nybjl0000e2cbv4mpic3x" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/APM/">APM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Zipkin/">Zipkin</a></li></ul>
@@ -423,7 +467,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="ck9h8w0b1000o7bc9llv3a3zk" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/06/最终一致性落地/" data-id="cka7nybk8000qe2cbsfgc3t26" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/BASE/">BASE</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/最终一致性/">最终一致性</a></li></ul>
@@ -464,7 +508,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="ck9h8w0b2000q7bc9d28ruxx8" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2019/01/05/服务提供者框架的思考/" data-id="cka7nybk9000se2cb18xt3qre" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li></ul>
@@ -508,48 +552,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="ck9h8w0ak00017bc98hkamzjz" class="article-share-link">Share</a>
+      <a data-url="http://hezudaopp.github.io/2018/12/28/Executor-Service内存泄漏/" data-id="cka7nybjq0001e2cba611bq5w" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Thread/">Thread</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-Hibernate持久化上下文对象同一性问题" class="article article-type-post" itemscope="" itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2018/12/26/Hibernate持久化上下文对象同一性问题/" class="article-date">
-  <time datetime="2018-12-26T12:56:07.000Z" itemprop="datePublished">2018-12-26</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2018/12/26/Hibernate持久化上下文对象同一性问题/">Hibernate持久化上下文对象同一性问题</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://hezudaopp.github.io/2018/12/26/Hibernate持久化上下文对象同一性问题/" data-id="ck9h8w0an00037bc90cgq4bfn" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Hibernate/">Hibernate</a></li></ul>
 
     </footer>
   </div>
@@ -562,7 +568,7 @@
 
   <nav id="page-nav">
     
-    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &raquo;</a>
   </nav>
 
 </section>
@@ -576,7 +582,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Curator/">Curator</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dubbo/">Dubbo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ELK/">ELK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/transient/">transient</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件消息/">事件消息</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/优雅停机/">优雅停机</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式缓存/">分布式缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式锁/">分布式锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存回写/">缓存回写</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/APM/">APM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Arthas/">Arthas</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/BASE/">BASE</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Binlog/">Binlog</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Builder-Pattern/">Builder Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/CQRS/">CQRS</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canal/">Canal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Curator/">Curator</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Deadlock/">Deadlock</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dependency-Reverse/">Dependency Reverse</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Design-Pattern/">Design Pattern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Dubbo/">Dubbo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ELK/">ELK</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Executor-Service/">Executor Service</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hibernate/">Hibernate</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Innodb/">Innodb</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JPA/">JPA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Kafka/">Kafka</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/LoadBalance/">LoadBalance</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL/">MySQL</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/RabbitMQ/">RabbitMQ</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Redis/">Redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Service-Provider-Framework/">Service Provider Framework</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Single-Instance-Parttern/">Single Instance Parttern</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Thread/">Thread</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ThreadLocal/">ThreadLocal</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zipkin/">Zipkin</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Zookeeper/">Zookeeper</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/durable/">durable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/netty/">netty</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/redis/">redis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/transient/">transient</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/一致性hash/">一致性hash</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/主从同步/">主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事件消息/">事件消息</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/优雅停机/">优雅停机</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式缓存/">分布式缓存</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/分布式锁/">分布式锁</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/微服务/">微服务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/最终一致性/">最终一致性</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/服务下沉/">服务下沉</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/消息队列/">消息队列</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/熔断限流降级/">熔断限流降级</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/缓存回写/">缓存回写</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/负载均衡/">负载均衡</a></li></ul>
     </div>
   </div>
 
@@ -586,7 +592,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/APM/" style="font-size: 15px;">APM</a> <a href="/tags/Arthas/" style="font-size: 10px;">Arthas</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/CQRS/" style="font-size: 10px;">CQRS</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Curator/" style="font-size: 10px;">Curator</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Dubbo/" style="font-size: 10px;">Dubbo</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 15px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Kafka/" style="font-size: 10px;">Kafka</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/Zookeeper/" style="font-size: 10px;">Zookeeper</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 15px;">redis</a> <a href="/tags/transient/" style="font-size: 10px;">transient</a> <a href="/tags/一致性hash/" style="font-size: 15px;">一致性hash</a> <a href="/tags/主从同步/" style="font-size: 15px;">主从同步</a> <a href="/tags/事件消息/" style="font-size: 10px;">事件消息</a> <a href="/tags/优雅停机/" style="font-size: 10px;">优雅停机</a> <a href="/tags/分布式缓存/" style="font-size: 10px;">分布式缓存</a> <a href="/tags/分布式锁/" style="font-size: 10px;">分布式锁</a> <a href="/tags/微服务/" style="font-size: 10px;">微服务</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a> <a href="/tags/服务下沉/" style="font-size: 10px;">服务下沉</a> <a href="/tags/消息队列/" style="font-size: 10px;">消息队列</a> <a href="/tags/熔断限流降级/" style="font-size: 10px;">熔断限流降级</a> <a href="/tags/缓存回写/" style="font-size: 10px;">缓存回写</a>
+      <a href="/tags/APM/" style="font-size: 15px;">APM</a> <a href="/tags/Arthas/" style="font-size: 10px;">Arthas</a> <a href="/tags/BASE/" style="font-size: 10px;">BASE</a> <a href="/tags/Binlog/" style="font-size: 10px;">Binlog</a> <a href="/tags/Builder-Pattern/" style="font-size: 10px;">Builder Pattern</a> <a href="/tags/CQRS/" style="font-size: 10px;">CQRS</a> <a href="/tags/Canal/" style="font-size: 10px;">Canal</a> <a href="/tags/Curator/" style="font-size: 10px;">Curator</a> <a href="/tags/Deadlock/" style="font-size: 10px;">Deadlock</a> <a href="/tags/Dependency-Reverse/" style="font-size: 10px;">Dependency Reverse</a> <a href="/tags/Design-Pattern/" style="font-size: 10px;">Design Pattern</a> <a href="/tags/Dubbo/" style="font-size: 10px;">Dubbo</a> <a href="/tags/ELK/" style="font-size: 10px;">ELK</a> <a href="/tags/Executor-Service/" style="font-size: 10px;">Executor Service</a> <a href="/tags/Hibernate/" style="font-size: 15px;">Hibernate</a> <a href="/tags/Innodb/" style="font-size: 10px;">Innodb</a> <a href="/tags/JPA/" style="font-size: 10px;">JPA</a> <a href="/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/tags/Kafka/" style="font-size: 10px;">Kafka</a> <a href="/tags/LoadBalance/" style="font-size: 10px;">LoadBalance</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/RabbitMQ/" style="font-size: 20px;">RabbitMQ</a> <a href="/tags/Redis/" style="font-size: 10px;">Redis</a> <a href="/tags/Service-Provider-Framework/" style="font-size: 10px;">Service Provider Framework</a> <a href="/tags/Single-Instance-Parttern/" style="font-size: 10px;">Single Instance Parttern</a> <a href="/tags/Thread/" style="font-size: 10px;">Thread</a> <a href="/tags/ThreadLocal/" style="font-size: 10px;">ThreadLocal</a> <a href="/tags/Zipkin/" style="font-size: 10px;">Zipkin</a> <a href="/tags/Zookeeper/" style="font-size: 10px;">Zookeeper</a> <a href="/tags/durable/" style="font-size: 10px;">durable</a> <a href="/tags/netty/" style="font-size: 10px;">netty</a> <a href="/tags/redis/" style="font-size: 15px;">redis</a> <a href="/tags/transient/" style="font-size: 10px;">transient</a> <a href="/tags/一致性hash/" style="font-size: 15px;">一致性hash</a> <a href="/tags/主从同步/" style="font-size: 15px;">主从同步</a> <a href="/tags/事件消息/" style="font-size: 10px;">事件消息</a> <a href="/tags/优雅停机/" style="font-size: 10px;">优雅停机</a> <a href="/tags/分布式缓存/" style="font-size: 10px;">分布式缓存</a> <a href="/tags/分布式锁/" style="font-size: 10px;">分布式锁</a> <a href="/tags/微服务/" style="font-size: 10px;">微服务</a> <a href="/tags/最终一致性/" style="font-size: 10px;">最终一致性</a> <a href="/tags/服务下沉/" style="font-size: 10px;">服务下沉</a> <a href="/tags/消息队列/" style="font-size: 10px;">消息队列</a> <a href="/tags/熔断限流降级/" style="font-size: 10px;">熔断限流降级</a> <a href="/tags/缓存回写/" style="font-size: 10px;">缓存回写</a> <a href="/tags/负载均衡/" style="font-size: 10px;">负载均衡</a>
     </div>
   </div>
 
@@ -608,6 +614,10 @@
       <ul>
         
           <li>
+            <a href="/2020/04/27/再谈RabbitMQ的负载均衡方案/">再谈RabbitMQ的负载均衡方案</a>
+          </li>
+        
+          <li>
             <a href="/2020/04/26/一致性hash和分布式缓存的一些思考/">一致性hash和分布式缓存的一些思考</a>
           </li>
         
@@ -621,10 +631,6 @@
         
           <li>
             <a href="/2019/11/18/RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势/">RabbitMQ和Kafka作为事件分发消息中间件使用时的正确姿势</a>
-          </li>
-        
-          <li>
-            <a href="/2019/07/28/redis-sentinel模式下主从同步延时引发的隐蔽问题/">redis sentinel模式下主从同步延时引发的隐蔽问题</a>
           </li>
         
       </ul>
